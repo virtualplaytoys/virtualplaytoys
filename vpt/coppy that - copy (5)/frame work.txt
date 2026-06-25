@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>virtual playtoy</title>
+<style>
+body {
+  background-color: #181818; /* Dark gray background */
+  color: #fff; /* White text for contrast */
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+.container {
+  width: 80%;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex; /* Use flexbox to arrange elements */
+  flex-direction: column; /* Arrange elements vertically */
+}
+
+.title {
+  text-align: center; /* Center the title */
+  font-size: 2.5em; /* Make the title larger */
+  margin-bottom: 20px;
+}
+
+.content {
+  display: flex; /* Use flexbox for side-by-side layout */
+}
+
+.image-section { /* New class for the image section */
+  width: 50%; /* Take up half the width */
+  margin-right: 20px; /* Add some space between sections */
+}
+
+.image-set { /* New class for each set of images */
+  margin-bottom: 30px; /* Space between image sets */
+}
+
+.image-set h2 { /* Style for the title of each image set */
+  text-align: center;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.photo-grid { /* New class for the image grid */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 10px; /* Space between images */
+}
+
+.photo-grid img { /* Style for images in the grid */
+  width: 100%;
+  height: auto;
+}
+
+.info-section { /* New class for the profile info section */
+  width: 50%; /* Take up half the width */
+}
+
+.info {
+  margin-top: 20px; /* Add some space between images and info */
+}
+
+.info h2 {
+  font-size: 1.5em;
+  color: #fff; /* White heading */
+  margin-bottom: 10px;
+}
+
+.info p {
+  line-height: 1.6;
+  color: #ddd; /* Slightly lighter gray for text */
+}
+
+.info strong {
+  font-weight: bold;
+  color: #fff; /* White for strong emphasis */
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="title">ALIAS: insert .</h1> 
+	<h2>Pick an avi, pay the price with your username, and follow custom instruction at the bottom</h2>
+
+  <div class="content">
+    <div class="image-section">
+      <!-- Image Set 1 -->
+      <div class="image-set">
+        <h2>Image Set 1 Title</h2>
+        <div class="photo-grid"> 
+          <img src="" alt="Image 1">
+          <img src="" alt="Image 2">
+          <img src="" alt="Image 3">
+          <img src="" alt="Image 4">
+        </div>
+      </div>
+
+      <!-- Image Set 2 -->
+      <div class="image-set">
+        <h2>Image Set 2 Title</h2>
+        <div class="photo-grid"> 
+          <img src="" alt="Image 5">
+          <img src="ezgif-64fac0a4be0347.gif" alt="Image 6">
+          <img src="" alt="Image 7">
+          <img src="" alt="Image 8">
+        </div>
+      </div>
+
+      <!-- Image Set 3 -->
+      <div class="image-set">
+        <h2>Image Set 3 Title</h2>
+        <div class="photo-grid"> 
+          <img src="" alt="Image 9">
+          <img src="" alt="Image 10">
+          <img src="" alt="Image 11">
+          <img src="" alt="Image 12">
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info">
+        <h2>Profile Information</h2>
+        <p><strong>Pronouns:</strong> he/him </p>
+        <p><strong>Gender:</strong> male</p>
+	<p><strong>Sexuality:</strong> Pansexual</p>
+        <p><strong>Bio:</strong> Im a dom as well as a power bottom. I am into woman and men, and I will play with you~.
+        Im also the owner of virtualplaytoys. and loves cats.</p>
+        <p><strong>Hardware:</strong>Im a pc/index user with slime vr fbt</p>
+        <p><strong>Location:</strong>Im an avid vrchat user</p>
+        <p><strong>Contact Info:</strong> Here for testing purposes</p>
+        <p><strong>Price:</strong> $30/hr-quest $40/hr-pc/quest fbt $50/hr-pc fullbody $60/hr-eye and face tracking</p>
+	<p><strong>Custom Instruction</strong> Walk up nude and smaller than me, Then sit on my lap</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

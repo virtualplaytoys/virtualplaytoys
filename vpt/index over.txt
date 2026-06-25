@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrolling Cat Showcase</title>
+    <style>
+        body {
+            background-color: #181818; /* Dark background */
+            color: #fff; /* White text */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden; /* Hide overflow to prevent scrollbars */
+            display: flex; /* Use flexbox for centering */
+            flex-direction: column; /* Arrange items vertically */
+            align-items: center; /* Center horizontally */
+            min-height: 100vh; /* Ensure body takes up full viewport height */
+        }
+
+        h1 {
+            text-align: center; /* Center the title */
+            margin-bottom: 20px; /* Add some space below the title */
+        }
+
+        .showcase {
+            overflow: hidden; /* Hide overflow */
+            white-space: nowrap; /* Prevent line breaks */
+            width: 100%; /* Full width */
+            position: relative; /* For absolute positioning of the gallery */
+            max-width: 800px; /* Set a maximum width for the showcase */
+        }
+
+        .gallery {
+            display: inline-block; /* Inline block for horizontal layout */
+            animation: scroll 20s linear infinite; /* Animation for scrolling */
+            position: relative; /* Position the gallery relatively */
+            top: 0; /* Align to the top */
+            left: 0; /* Align to the left */
+        }
+
+        .gallery a {
+            display: inline-block; /* Inline block for images */
+            margin-right: 10px; /* Space between images */
+        }
+
+        .gallery img {
+            width: 150px; /* Set a fixed width for images */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 8px; /* Rounded corners */
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0%); /* Start at the beginning */
+            }
+            100% {
+                transform: translateX(-100%); /* Move to the left by 100% */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Random Cat Showcase</h1>
+    <div class="showcase">
+        <div class="gallery">
+            <a href="profile1.html">
+                <img src="https://placekitten.com/200/300?image=1" alt="Cat 1">
+            </a>
+            <a href="profile2.html">
+                <img src="https://placekitten.com/200/300?image=2" alt="Cat 2">
+            </a>
+            <a href="profile3.html">
+                <img src="https://placekitten.com/200/300?image=3" alt="Cat 3">
+            </a>
+            <a href="profile4.html">
+                <img src="https://placekitten.com/200/300?image=4" alt="Cat 4">
+            </a>
+            <a href="profile5.html">
+                <img src="https://placekitten.com/200/300?image=5" alt="Cat 5">
+            </a>
+            <a href="profile6.html">
+                <img src="https://placekitten.com/200/300?image=6" alt="Cat 6">
+            </a>
+            <!-- Add more images as needed -->
+        </div>
+    </div>
+
+</body>
+</html>

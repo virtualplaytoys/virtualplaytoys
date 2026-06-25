@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<headers.set("ngrok-skip-browser-warning", true);>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service</title>
+    <style>
+        /* Default (Light Mode) Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #000000; /* Light gray background */
+            color: #ffffff; /* Dark text */
+        }
+        .tos-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #000000; /* White background for container */
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .tos-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .tos-text {
+            margin-bottom: 15px;
+            height: 200px; /* Adjust as needed */
+            overflow-y: scroll; /* Enables scrolling */
+            padding-right: 10px; /* Add padding for scrollbar */
+            color: #ffffff;
+        }
+        .checkbox-container {
+            margin-top: 15px;
+            color: #333;
+        }
+        .accept-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .accept-button:disabled {
+            background-color: #cccccc; /* Greyed out */
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tos-container">
+        <div class="tos-title">Terms of Service</div>
+        <div class="tos-text" id="tos-text-area">
+            <!-- Your Terms of Service content goes here. Be as detailed as necessary. -->
+            <p>By using this website, you agree to the following terms and conditions...</p>
+            <p>Terms of Service
+
+By accessing or using this website, you agree to the following terms and conditions:
+
+<li>1. Payment and Consent:<li/>
+
+Payment constitutes explicit consent to participate in the creation of adult video content. You acknowledge that you have been fully informed of this and that video evidence of your consent exists.
+You understand that the resulting video will be distributed on this platform and potentially other platforms as permitted by law.
+You confirm you are of legal age to participate in the creation of adult content and that your participation is entirely voluntary.
+<li>2. Nature of Content:<li/>
+
+This website is dedicated to the production and distribution of adult video content. We do not facilitate prostitution or any other illegal sexual activity.
+We are not a brothel or a facilitator of illegal activities.
+All participants are considered independent contractors and are solely responsible for their actions.
+<li>3. Indemnification:
+
+You agree to indemnify and hold harmless this website, its owners, operators, and affiliates from any and all claims, damages, liabilities, costs, and expenses arising from your participation in the creation of adult video content.
+<li/> 
+<p>Disclaimer:
+This website does not provide legal advice. You are solely responsible for understanding and complying with all applicable laws and regulations in your jurisdiction.
+By accessing and using this website, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
+            
+                <li>Contact information:
+any questions you wish to ask, email me at virtualplaytoys@proton.me</li>
+        </div>
+        <div class="checkbox-container">
+            <input type="checkbox" id="tos-agree" disabled>
+            <label for="tos-agree">I have read and agree to the Terms of Service.</label>
+        </div>
+        <button class="accept-button" id="accept-button" disabled>Accept</button>
+    </div>
+
+    <script>
+        const tosTextArea = document.getElementById('tos-text-area');
+        const agreeCheckbox = document.getElementById('tos-agree');
+        const acceptButton = document.getElementById('accept-button');
+
+        // Function to check if the user has scrolled to the bottom
+        function isScrolledToBottom() {
+            return tosTextArea.scrollHeight - tosTextArea.scrollTop <= tosTextArea.clientHeight + 1; // +1 for a little buffer
+        }
+
+        // Event listener for scrolling
+        tosTextArea.addEventListener('scroll', function() {
+            if (isScrolledToBottom()) {
+                agreeCheckbox.disabled = false; // Enable the checkbox
+            }
+        });
+
+        agreeCheckbox.addEventListener('change', function() {
+            acceptButton.disabled = !this.checked;
+        });
+
+        acceptButton.addEventListener('click', function() {
+            // **Cookie Implementation**
+            // Set a cookie to indicate acceptance
+            const expirationDate = new Date();
+            expirationDate.setFullYear(expirationDate.getFullYear() + 1); // Expires in 1 year
+            document.cookie = "tosAccepted=true; expires=" + expirationDate.toUTCString() + "; path=/";
+
+            // Optional:  Redirect the user or perform other actions after acceptance.
+            alert('You have accepted the Terms of Service!');
+            window.location.href = "vpt/vpt_index.html";
+        });
+
+        // **Check for Existing Cookie on Page Load**
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Check if the TOS has already been accepted
+        window.onload = function() {
+            if (getCookie('tosAccepted') === 'true') {
+                // Hide the TOS or redirect the user
+                window.location.href = "vpt/vpt_index.html"; // Redirect to index.html
+            }
+        };
+    </script>
+
+</body>
+</html>
