@@ -17,19 +17,24 @@ each other by filename (`index.html` → `directory-template.html` →
 `admin.html`, etc.), so moving one into a subfolder will break those
 links.
 
-## Deploying to GitHub Pages
-1. Create a new GitHub repo (or use an existing one) and push these
-   four files to it.
-2. In the repo, go to **Settings → Pages**.
-3. Under **Build and deployment → Source**, choose **Deploy from a
-   branch**, pick your branch (usually `main`) and the `/ (root)`
-   folder, then save.
-4. GitHub will give you a URL like
-   `https://<your-username>.github.io/<repo-name>/` — that's your
-   live site, starting at the age gate.
+## Deploying to Netlify (with GitHub as the source repo)
+1. Push these four files to a GitHub repo (root of the repo, not a
+   subfolder).
+2. In Netlify, click **Add new site → Import an existing project**,
+   then **Deploy with GitHub** and pick that repo.
+3. Build settings: leave **Build command** blank and set **Publish
+   directory** to `/` (the repo root) — there's no build step, these
+   are plain static files.
+4. Click **Deploy site**. Netlify gives you a live URL (something like
+   `random-name-123.netlify.app`) within a few seconds, starting at the
+   age gate (`index.html`).
+5. Any time you push new commits to the connected branch, Netlify
+   redeploys automatically.
 
-Changes usually go live within a minute or two of pushing to the
-branch GitHub Pages is watching.
+If you'd rather not connect a repo, you can also drag-and-drop the
+unzipped folder straight onto Netlify's dashboard for a one-off deploy
+— but connecting GitHub means every future push updates the live site
+automatically.
 
 ## Before you go live — things to change
 - **Age gate "Leave" link** — in `index.html`, search for `LEAVE_URL`
