@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>~*~ Prism Collective ~*~ Avatar Directory ~*~</title>
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --panel:#181818;
+    --panel-2:#212121;
+    --border:#303030;
+    --text:#f1f1f1;
+    --text-dim:#aaaaaa;
+    --text-faint:#717171;
+    --accent:#3ea6ff;
+    --link:#3ea6ff;
+    --good:#3ea63e;
+    --bad:#e14545;
+    --font: Arial, Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:14px;
+  }
+
+  a{color:var(--link);text-decoration:none;}
+
+  .box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+
+  /* ---------- Header ---------- */
+  .header-wrap{ padding:20px 4vw 10px; }
+  header.box{
+    max-width:900px;
+    margin:0 auto;
+    padding:22px 24px;
+  }
+  h1{
+    font-size:1.6rem;
+    margin:0 0 8px;
+    color:var(--text);
+    font-weight:bold;
+  }
+  header p.lede{
+    max-width:65ch;
+    margin:0;
+    color:var(--text-dim);
+    font-size:0.92rem;
+    line-height:1.55;
+  }
+
+  /* ---------- Photo scroller ---------- */
+  .marquee-shell.box{
+    position:relative;
+    height:180px;
+    overflow:hidden;
+    margin:16px 4vw;
+  }
+  .marquee-track{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:100%;
+  }
+  .marquee-track a{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    display:block;
+    cursor:pointer;
+  }
+  .marquee-track img{
+    display:block;
+    height:150px;
+    width:auto;
+    border-radius:6px;
+    border:1px solid var(--border);
+    transition:border-color .15s ease;
+  }
+  .marquee-track a:hover img{
+    border-color:var(--text-faint);
+  }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    margin:20px 4vw 0;
+    padding:14px 16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+  }
+  .search{
+    flex:1 1 240px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:8px 14px;
+  }
+  .search input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.9rem;
+  }
+  .search input::placeholder{color:var(--text-faint);}
+
+  .result-count{
+    margin:12px 4vw 0;
+    font-size:0.8rem;
+    color:var(--text-faint);
+  }
+
+  /* ---------- Grid ---------- */
+  .grid{
+    padding:14px 4vw 60px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+    gap:18px;
+  }
+
+  .card{
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .card:hover{ border-color:var(--text-faint); }
+
+  .card-media{
+    position:relative;
+    aspect-ratio:4/3;
+    overflow:hidden;
+    border-bottom:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  .card-media img{ width:100%; height:100%; object-fit:cover; }
+  .status-dot{
+    position:absolute;
+    top:8px; right:8px;
+    display:flex; align-items:center; gap:5px;
+    font-size:0.65rem;
+    background:rgba(0,0,0,0.75);
+    padding:3px 8px;
+    border-radius:12px;
+    color:var(--text-dim);
+  }
+  .status-dot::before{
+    content:'';
+    width:6px;height:6px;border-radius:50%;
+    background:var(--good);
+    display:inline-block;
+  }
+  .status-dot.away::before{ background:var(--bad); }
+
+  .card-body{ padding:14px 14px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .card-name{
+    font-size:1.05rem;
+    margin:0;
+    color:var(--text);
+    font-weight:bold;
+  }
+  .card-role{
+    font-size:0.72rem;
+    letter-spacing:0.02em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+  }
+  .card-gender{
+    font-size:0.72rem;
+    color:var(--text-faint);
+  }
+  .card-bio{ font-size:0.85rem; line-height:1.5; color:var(--text-dim); margin:0; flex:1; }
+  .card-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+  .chip{
+    font-size:0.68rem;
+    padding:2px 9px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    background:var(--panel-2);
+  }
+  .card-cta{
+    margin-top:8px;
+    font-size:0.82rem;
+    color:var(--accent);
+    text-align:center;
+    padding:7px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  .card-cta:hover{ background:var(--border); }
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:50px 20px;
+    color:var(--text-faint);
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:0.75rem;
+    color:var(--text-faint);
+    border-top:1px solid var(--border);
+  }
+  .visitor-badge{
+    display:inline-block;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:5px 12px;
+    color:var(--text-dim);
+    font-family:'Courier New',monospace;
+    margin-top:8px;
+  }
+
+  /* ---------- Admin toolbar (only visible with a valid admin cookie) ---------- */
+  .admin-toolbar{
+    display:none;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--accent);
+    padding:10px 4vw;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .admin-toolbar.visible{ display:flex; }
+  .admin-toolbar .label{
+    font-size:0.78rem;
+    color:var(--accent);
+    font-weight:bold;
+    white-space:nowrap;
+  }
+  .admin-toolbar .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    font-size:0.8rem;
+    padding:7px 14px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+    cursor:pointer;
+    font-family:var(--font);
+  }
+  .btn:hover{ background:var(--border); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:bold; }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.commit{ position:relative; }
+  .btn.commit.dirty{ background:var(--good); border-color:var(--good); color:#052905; font-weight:bold; }
+  .btn.commit:disabled{ opacity:0.5; cursor:default; }
+  .btn[disabled]{ opacity:0.5; cursor:default; }
+  .pending-badge{
+    font-size:0.68rem;
+    background:var(--bad);
+    color:#fff;
+    border-radius:999px;
+    padding:1px 7px;
+    margin-left:6px;
+  }
+
+  /* ---------- Admin controls on cards ---------- */
+  .card-admin-controls{
+    position:absolute;
+    top:8px; left:8px;
+    z-index:2;
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .icon-btn{
+    width:26px; height:26px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,0.8);
+    color:var(--text);
+    font-size:0.8rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    cursor:pointer;
+  }
+  .icon-btn:hover{ background:rgba(0,0,0,0.95); }
+  .icon-btn.delete:hover{ color:var(--bad); border-color:var(--bad); }
+
+  .switch{
+    position:relative;
+    display:inline-block;
+    width:34px; height:18px;
+    cursor:pointer;
+  }
+  .switch input{ display:none; }
+  .switch .track{
+    position:absolute; inset:0;
+    background:var(--bad);
+    border-radius:999px;
+    transition:background .15s ease;
+  }
+  .switch input:checked + .track{ background:var(--good); }
+  .switch .thumb{
+    position:absolute;
+    top:2px; left:2px;
+    width:14px; height:14px;
+    background:#fff;
+    border-radius:50%;
+    transition:transform .15s ease;
+  }
+  .switch input:checked ~ .thumb{ transform:translateX(16px); }
+
+  .card.dirty{ outline:2px solid var(--accent); outline-offset:-1px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .marquee-track img{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Only shown when a valid admin cookie is present (set by admin.html) -->
+<div class="admin-toolbar" id="adminToolbar">
+  <span class="label">⚙ Admin — changes below are staged until you commit</span>
+  <div class="actions">
+    <button class="btn primary" id="quickAddBtn">+ Add person</button>
+    <button class="btn commit" id="commitBtn" disabled>Commit changes<span class="pending-badge" id="pendingBadge" style="display:none;">0</span></button>
+    <a class="btn" href="admin.html">Full editor</a>
+    <button class="btn" id="toolbarLogoutBtn">Log out</button>
+  </div>
+</div>
+
+<div class="header-wrap">
+  <header class="box">
+    <h1><span class="sparkle">✦</span> Prism Collective <span class="sparkle">✦</span></h1>
+    <p class="lede">A directory of virtual avatar artisans. Search by name to find the right creator for your next avatar.</p>
+  </header>
+</div>
+
+<div class="marquee-shell box" id="marqueeShell">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<div class="controls box">
+  <div class="search">
+    <span>🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by name..." />
+  </div>
+</div>
+
+<div class="result-count" id="resultCount"></div>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  <p>© Prism Collective — a fan-made template, not a real site</p>
+  <div class="visitor-badge">VISITORS: 004,281</div>
+  <div><a href="admin.html">Admin</a></div>
+</footer>
+
+<!-- Quick add — minimal fields; full editing (image, gender, tags, link)
+     still happens in admin.html after this person is committed. -->
+<div class="modal-overlay" id="quickAddOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-start; justify-content:center; padding:6vh 16px; overflow-y:auto;">
+  <div class="box" style="max-width:420px; width:100%; padding:20px;">
+    <h2 style="font-size:1.1rem; margin:0 0 14px;">Quick add person</h2>
+    <form id="quickAddForm">
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.78rem; color:var(--text-dim); margin-bottom:5px;">Name</label>
+        <input type="text" id="quickName" required style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; color:var(--text); font-family:var(--font);" />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.78rem; color:var(--text-dim); margin-bottom:5px;">Role / title</label>
+        <input type="text" id="quickRole" required style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; color:var(--text); font-family:var(--font);" />
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block; font-size:0.78rem; color:var(--text-dim); margin-bottom:5px;">Short bio</label>
+        <textarea id="quickBio" required style="width:100%; min-height:60px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:8px 10px; color:var(--text); font-family:var(--font);"></textarea>
+      </div>
+      <p class="field-hint" style="font-size:0.7rem; color:var(--text-faint); margin:0 0 14px;">
+        Added as "Available" with a placeholder picture. Add tags, a
+        gender field, a real picture, or a link from the full editor
+        after committing.
+      </p>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn" id="quickAddCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Add to staged changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="members-data.js"></script>
+<script>
+  // ---------------------------------------------------------
+  // Admin toolbar — only appears if the "prism_admin_session" cookie
+  // is present (set by logging in on admin.html). Add/remove/status
+  // changes made here are staged in memory and only written to local
+  // storage when "Commit changes" is clicked, so a half-finished
+  // editing session can't accidentally overwrite saved data.
+  // ---------------------------------------------------------
+  const ADMIN_SESSION_KEY = 'prism_admin_session';
+
+  function getCookie(name){
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return match ? match[1] : null;
+  }
+
+  function eraseCookie(name){
+    document.cookie = `${name}=; max-age=0; path=/; samesite=Lax`;
+  }
+
+  function isAdmin(){
+    return getCookie(ADMIN_SESSION_KEY) === 'true';
+  }
+
+  let MEMBERS = loadMembers(); // working copy — see isDirty below
+  let isDirty = false;
+  let pendingCount = 0;
+
+  function markDirty(){
+    isDirty = true;
+    pendingCount++;
+    const commitBtn = document.getElementById('commitBtn');
+    const badge = document.getElementById('pendingBadge');
+    commitBtn.disabled = false;
+    commitBtn.classList.add('dirty');
+    badge.style.display = 'inline-block';
+    badge.textContent = pendingCount;
+  }
+
+  function clearDirty(){
+    isDirty = false;
+    pendingCount = 0;
+    const commitBtn = document.getElementById('commitBtn');
+    const badge = document.getElementById('pendingBadge');
+    commitBtn.disabled = true;
+    commitBtn.classList.remove('dirty');
+    badge.style.display = 'none';
+  }
+
+  window.addEventListener('beforeunload', e => {
+    if(isDirty){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  if(isAdmin()){
+    document.getElementById('adminToolbar').classList.add('visible');
+  }
+
+  document.getElementById('commitBtn').addEventListener('click', () => {
+    MEMBERS.forEach(m => { delete m._dirty; });
+    saveMembers(MEMBERS);
+    clearDirty();
+    render();
+  });
+
+  document.getElementById('toolbarLogoutBtn').addEventListener('click', () => {
+    if(isDirty && !confirm('You have uncommitted changes that will be lost. Log out anyway?')) return;
+    eraseCookie(ADMIN_SESSION_KEY);
+    window.location.reload();
+  });
+
+  function toggleStatus(id){
+    const m = MEMBERS.find(x => x.id === id);
+    if(!m) return;
+    m.status = m.status === 'available' ? 'unavailable' : 'available';
+    m._dirty = true;
+    markDirty();
+    render();
+  }
+
+  function removePerson(id){
+    const m = MEMBERS.find(x => x.id === id);
+    if(!m) return;
+    if(!confirm(`Remove ${m.name} from the directory? This won't be permanent until you hit Commit.`)) return;
+    MEMBERS = MEMBERS.filter(x => x.id !== id);
+    markDirty();
+    rebuildMarquee();
+    render();
+  }
+
+  // ---- Quick add modal ----
+  const quickAddOverlay = document.getElementById('quickAddOverlay');
+  document.getElementById('quickAddBtn').addEventListener('click', () => {
+    document.getElementById('quickAddForm').reset();
+    quickAddOverlay.style.display = 'flex';
+  });
+  document.getElementById('quickAddCancelBtn').addEventListener('click', () => {
+    quickAddOverlay.style.display = 'none';
+  });
+  document.getElementById('quickAddForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('quickName').value.trim();
+    const role = document.getElementById('quickRole').value.trim();
+    const bio = document.getElementById('quickBio').value.trim();
+    if(!name || !role || !bio) return;
+
+    const nextId = MEMBERS.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+    MEMBERS.push({
+      id: nextId, name, role, bio,
+      gender: '', tags: [], status: 'available', link: '#', image: '',
+      _dirty: true
+    });
+    markDirty();
+    rebuildMarquee();
+    render();
+    quickAddOverlay.style.display = 'none';
+  });
+
+  // ---------------------------------------------------------
+  // Photo scroller (hopper model): images are drawn one at a time
+  // from a shuffled reservoir of members, drift left on their own,
+  // and are returned to the reservoir once fully off-screen.
+  // ---------------------------------------------------------
+  const track = document.getElementById('marqueeTrack');
+  const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
+
+  function placeholderImg(seed, label){
+    const color = placeholderColors[seed % placeholderColors.length];
+    return `https://placehold.co/220x220/${color}/0a0512?text=${encodeURIComponent(label)}`;
+  }
+
+  function imageFor(member, seed){
+    return member.image || placeholderImg(seed, member.name.split(' ')[0]);
+  }
+
+  function makeItem(memberIndex){
+    const m = MEMBERS[memberIndex];
+    const a = document.createElement('a');
+    a.href = m.link || '#';
+    a.setAttribute('aria-label', `View ${m.name}'s profile`);
+    a.style.position = 'absolute';
+    a.style.top = '50%';
+    a.style.transform = 'translateY(-50%)';
+
+    const img = document.createElement('img');
+    img.src = imageFor(m, memberIndex);
+    img.alt = m.name;
+
+    a.appendChild(img);
+    return a;
+  }
+
+  const GAP = 32;
+  const SPEED = 55; // px per second
+  let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lastTime = null;
+  let widthsByMember = [];
+  let active = [];
+  let reservoir = [];
+
+  function shuffledIndices(){
+    const arr = MEMBERS.map((_, i) => i);
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function drawFromReservoir(){
+    if(reservoir.length === 0) reservoir = shuffledIndices();
+    return reservoir.shift();
+  }
+
+  function returnToReservoir(memberIndex){
+    reservoir.push(memberIndex);
+  }
+
+  function waitForImages(images){
+    return Promise.all([...images].map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+    }));
+  }
+
+  async function preloadWidths(){
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute; visibility:hidden; top:-9999px; left:-9999px; display:flex;';
+    document.body.appendChild(probe);
+
+    const imgs = MEMBERS.map((m, i) => {
+      const img = document.createElement('img');
+      img.src = imageFor(m, i);
+      img.style.cssText = 'height:150px; width:auto;';
+      probe.appendChild(img);
+      return img;
+    });
+
+    await waitForImages(imgs);
+    widthsByMember = imgs.map(img => img.getBoundingClientRect().width);
+    probe.remove();
+  }
+
+  function spawnNext(startX){
+    const memberIndex = drawFromReservoir();
+    const el = makeItem(memberIndex);
+    const w = widthsByMember[memberIndex];
+    el.style.left = `${startX}px`;
+    track.appendChild(el);
+    active.push({ el, x: startX, w, memberIndex });
+  }
+
+  function primeInitialRow(){
+    const shellWidth = document.getElementById('marqueeShell').clientWidth;
+    let x = shellWidth;
+    while(x > -200 && MEMBERS.length){
+      spawnNext(x);
+      const last = active[active.length - 1];
+      x -= (last.w + GAP);
+    }
+  }
+
+  function tick(timestamp){
+    if(lastTime === null) lastTime = timestamp;
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    if(!paused && MEMBERS.length){
+      const distance = SPEED * dt;
+      const shellWidth = document.getElementById('marqueeShell').clientWidth;
+
+      active.forEach(item => {
+        item.x -= distance;
+        item.el.style.left = `${item.x}px`;
+      });
+
+      const rightmost = active.length
+        ? Math.max(...active.map(item => item.x + item.w))
+        : -Infinity;
+      if(rightmost + GAP <= shellWidth){
+        spawnNext(Math.max(shellWidth, rightmost + GAP));
+      }
+
+      active = active.filter(item => {
+        if(item.x + item.w < 0){
+          item.el.remove();
+          returnToReservoir(item.memberIndex);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  async function rebuildMarquee(){
+    active.forEach(item => item.el.remove());
+    active = [];
+    reservoir = [];
+    await preloadWidths();
+    reservoir = shuffledIndices();
+    primeInitialRow();
+  }
+
+  (async () => {
+    await rebuildMarquee();
+    requestAnimationFrame(tick);
+  })();
+
+  document.getElementById('marqueeShell').addEventListener('mouseenter', () => paused = true);
+  document.getElementById('marqueeShell').addEventListener('mouseleave', () => paused = false);
+
+  // ---------------------------------------------------------
+  // Search + grid render
+  // ---------------------------------------------------------
+  const searchInput = document.getElementById('searchInput');
+  const grid = document.getElementById('grid');
+  const resultCount = document.getElementById('resultCount');
+
+  searchInput.addEventListener('input', render);
+
+  function cardTemplate(m, idx){
+    const img = imageFor(m, idx);
+    const admin = isAdmin();
+    const cardClasses = `card box${admin && m._dirty ? ' dirty' : ''}`;
+
+    const adminControls = admin ? `
+      <div class="card-admin-controls">
+        <button class="icon-btn delete" title="Remove ${m.name}" data-action="remove" data-id="${m.id}">✕</button>
+        <label class="switch" title="Toggle availability">
+          <input type="checkbox" data-action="toggle" data-id="${m.id}" ${m.status === 'available' ? 'checked' : ''} />
+          <span class="track"></span>
+          <span class="thumb"></span>
+        </label>
+      </div>
+    ` : '';
+
+    const inner = `
+      <div class="card-media">
+        <img src="${img}" alt="${m.name}" loading="lazy" />
+        <span class="status-dot ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>
+      </div>
+      <div class="card-body">
+        <p class="card-role">${m.role}</p>
+        <h3 class="card-name">${m.name}</h3>
+        ${m.gender ? `<p class="card-gender">${m.gender}</p>` : ''}
+        <p class="card-bio">${m.bio}</p>
+        <div class="card-tags">
+          ${(m.tags || []).map(t => `<span class="chip">${t}</span>`).join('')}
+        </div>
+        <div class="card-cta">View profile &raquo;</div>
+      </div>`;
+
+    if(admin){
+      // Wrap the clickable content in its own link so the delete
+      // button and toggle switch (positioned on top) don't trigger
+      // navigation when clicked.
+      return `<div class="${cardClasses}">${adminControls}<a href="${m.link || '#'}" style="display:contents;">${inner}</a></div>`;
+    }
+
+    return `<a class="${cardClasses}" href="${m.link || '#'}">${inner}</a>`;
+  }
+
+  function render(){
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = MEMBERS.filter(m => !q || m.name.toLowerCase().includes(q));
+
+    resultCount.textContent = `${filtered.length} member${filtered.length === 1 ? '' : 's'} found`;
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state">No members match that search.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(m => cardTemplate(m, MEMBERS.indexOf(m))).join('');
+
+    if(isAdmin()){
+      grid.querySelectorAll('[data-action="remove"]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          removePerson(Number(btn.dataset.id));
+        });
+      });
+      grid.querySelectorAll('[data-action="toggle"]').forEach(input => {
+        input.addEventListener('click', e => {
+          e.preventDefault(); // we flip status ourselves and re-render
+          toggleStatus(Number(input.dataset.id));
+        });
+      });
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>
