@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Age Verification — Prism Collective</title>
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --panel:#181818;
+    --panel-2:#212121;
+    --border:#303030;
+    --text:#f1f1f1;
+    --text-dim:#aaaaaa;
+    --text-faint:#717171;
+    --accent:#3ea6ff;
+    --bad:#e14545;
+    --font: Arial, Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+
+  .gate{
+    max-width:460px;
+    width:100%;
+    padding:32px 28px 28px;
+    text-align:center;
+  }
+
+  .gate .badge{
+    display:inline-block;
+    font-size:0.72rem;
+    letter-spacing:0.06em;
+    color:var(--accent);
+    border:1px solid var(--accent);
+    border-radius:999px;
+    padding:4px 12px;
+    margin-bottom:16px;
+  }
+
+  h1{
+    font-size:1.4rem;
+    margin:0 0 14px;
+  }
+
+  p{
+    color:var(--text-dim);
+    font-size:0.9rem;
+    line-height:1.6;
+    margin:0 0 14px;
+  }
+
+  .fine-print{
+    font-size:0.78rem;
+    color:var(--text-faint);
+    line-height:1.55;
+    margin:18px 0 22px;
+    text-align:left;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 16px;
+  }
+  .fine-print ul{ margin:8px 0 0; padding-left:18px; }
+  .fine-print li{ margin-bottom:4px; }
+
+  .actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .btn{
+    font-family:var(--font);
+    font-size:0.92rem;
+    padding:12px 18px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    cursor:pointer;
+  }
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#04121f;
+    font-weight:bold;
+  }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.leave{ color:var(--text-faint); }
+  .btn.leave:hover{ color:var(--text-dim); }
+
+  .remember{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:0.8rem;
+    color:var(--text-faint);
+    margin-bottom:18px;
+  }
+  .remember input{ accent-color:var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="gate box">
+  <span class="badge">18+ Content Notice</span>
+  <h1>Before you go in</h1>
+  <p>
+    This site is a portfolio of virtual avatar work. Some pieces include
+    partial or full nudity, shown for the purpose of demonstrating
+    sculpting, texture, and weight-painting work on the underlying
+    models — not as sexual content in itself.
+  </p>
+
+  <div class="fine-print">
+    By entering, you confirm that:
+    <ul>
+      <li>You are at least 18 years old (or the age of majority where you live, if higher).</li>
+      <li>You understand the site contains artistic nudity and mature imagery.</li>
+      <li>You are not offended by this kind of content and are choosing to view it voluntarily.</li>
+    </ul>
+  </div>
+
+  <label class="remember">
+    <input type="checkbox" id="rememberChoice" checked />
+    Remember my choice on this device
+  </label>
+
+  <div class="actions">
+    <button class="btn primary" id="enterBtn">I am 18 or older — Enter</button>
+    <button class="btn leave" id="leaveBtn">I'm under 18 / I'd rather not — Leave</button>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'prism_age_verified';
+  const DESTINATION = 'directory-template.html';
+  const LEAVE_URL = 'https://www.google.com';
+
+  // If the visitor already confirmed on this device, skip straight
+  // through instead of showing the gate again.
+  if(localStorage.getItem(STORAGE_KEY) === 'true'){
+    window.location.replace(DESTINATION);
+  }
+
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    if(document.getElementById('rememberChoice').checked){
+      localStorage.setItem(STORAGE_KEY, 'true');
+    }
+    window.location.href = DESTINATION;
+  });
+
+  document.getElementById('leaveBtn').addEventListener('click', () => {
+    window.location.href = LEAVE_URL;
+  });
+</script>
+</body>
+</html>
