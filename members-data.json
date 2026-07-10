@@ -40,22 +40,6 @@
     "bottomSections": []
   },
   {
-    "id": 3,
-    "name": "Onyx Marrow",
-    "role": "3D Sculptor",
-    "gender": "He/him",
-    "tags": [
-      "gothic",
-      "original"
-    ],
-    "bio": "Dark academia-inspired designs with hand-sculpted fabric physics and candlelit textures.",
-    "status": "unavailable",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 4,
     "name": "Fable Ashgrove",
     "role": "Texture Artist",
