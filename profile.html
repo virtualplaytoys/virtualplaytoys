@@ -196,10 +196,8 @@
 
 <script src="members-data.js"></script>
 <script>
-  const MEMBERS = loadMembers();
   const params = new URLSearchParams(window.location.search);
   const id = Number(params.get('id'));
-  const member = MEMBERS.find(m => m.id === id);
   const content = document.getElementById('pageContent');
 
   const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
@@ -208,15 +206,20 @@
     return `https://placehold.co/500x375/${color}/0a0512?text=${encodeURIComponent(label)}`;
   }
 
-  if(!member){
-    content.innerHTML = `
-      <div class="not-found box">
-        <h1>Profile not found</h1>
-        <p>This artist doesn't exist, or the link is missing an id. <a href="directory-template.html">Back to the directory &raquo;</a></p>
-      </div>`;
-  }else{
-    renderProfile(member);
-  }
+  (async () => {
+    const MEMBERS = await loadMembers();
+    const member = MEMBERS.find(m => m.id === id);
+
+    if(!member){
+      content.innerHTML = `
+        <div class="not-found box">
+          <h1>Profile not found</h1>
+          <p>This artist doesn't exist, or the link is missing an id. <a href="directory-template.html">Back to the directory &raquo;</a></p>
+        </div>`;
+    }else{
+      renderProfile(member);
+    }
+  })();
 
   function renderPortfolio(portfolio){
     if(!portfolio || portfolio.length === 0){

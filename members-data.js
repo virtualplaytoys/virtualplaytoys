@@ -1,85 +1,58 @@
 // =====================================================================
-// DEFAULT MEMBER DATA — shared by directory-template.html (public
-// catalog), admin.html (admin panel), and profile.html (individual
-// artist pages). All three pages load this file.
+// SHARED DATA HELPERS — used by directory-template.html, admin.html,
+// and profile.html.
 // -----------------------------------------------------------------
-// This is only the STARTING data set, used the very first time any
-// page runs (before anything has been saved). Once you add, edit, or
-// delete something from admin.html, the working copy lives in the
-// browser's local storage instead, and this file is only read again
-// if you click "Restore defaults" in the admin panel.
+// The real, shared-with-everyone data lives in members-data.json in
+// this same repo. loadMembers() fetches it fresh every time (with a
+// cache-busting query param so a browser cache can't show stale data
+// right after a publish).
 //
-// FIELD GUIDE:
-//   id             -> unique number, auto-assigned for new profiles
-//   name           -> display name
-//   role           -> short label under the name (e.g. "Character Artist")
-//   gender         -> free-text field (e.g. "She/her")
-//   tags           -> array of lowercase words
-//   bio            -> main bio paragraph, shown on the card and profile page
-//   status         -> "available" or "unavailable"
-//   image          -> data URL or external URL for their card picture.
-//                      Leave empty to use an auto-generated placeholder.
+// publishMembers() is how admin.html writes changes back: it calls a
+// Netlify serverless function (netlify/functions/publish-members.js),
+// which verifies your authenticator code SERVER-SIDE (the actual
+// secret never ships to the browser for this step) and, if valid,
+// commits the updated members-data.json straight to your GitHub repo.
+// Netlify then redeploys automatically, and everyone's next page load
+// sees the change — usually within well under a minute.
 //
-//   portfolio      -> array of projects shown on the LEFT side of their
-//                      profile page: [{ id, title, images: [url, ...] }]
-//                      2 or fewer projects show open by default; 3+ and
-//                      each title becomes a click-to-expand dropdown.
-//   extraBio       -> array of extra text blocks shown on the RIGHT side,
-//                      under the main bio: [{ id, title, text }]
-//   bottomSections -> array of full-width blocks at the BOTTOM of the
-//                      page (a watermark image, extra dropdowns, etc.):
-//                      [{ id, title, image, text }] — image and text
-//                      are both optional, use whichever a section needs.
+// DEFAULT_MEMBERS below is only a last-resort fallback, used if the
+// fetch fails (e.g. you open these files directly from disk instead
+// of through a real web server, where fetching a local JSON file
+// doesn't work). On a real deployment this fallback should never be
+// needed.
 // =====================================================================
 const DEFAULT_MEMBERS = [
-  {
-    id:1, name:"Vesper Kaida", role:"Character Artist", gender:"She/her",
-    tags:["cyberpunk","original"],
-    bio:"Builds neon-lit street-style avatars with a focus on modular armor pieces and animated visor UI.",
-    status:"available", image:"",
-    portfolio:[
-      { id:1, title:"Neon Courier — full avatar", images:[] },
-      { id:2, title:"Modular visor rig breakdown", images:[] },
-      { id:3, title:"Street-style texture pass", images:[] }
-    ],
-    extraBio:[
-      { id:1, title:"Commission info", text:"Full avatar commissions take 3-5 weeks. Rigging-only or texture-only passes available separately." }
-    ],
-    bottomSections:[]
-  },
-  {
-    id:2, name:"Rin Solace", role:"Rigger & Animator", gender:"They/them",
-    tags:["fantasy","creature"],
-    bio:"Specializes in expressive custom face rigs for creature and hybrid-form avatars.",
-    status:"available", image:"",
-    portfolio:[
-      { id:1, title:"Creature face rig demo", images:[] },
-      { id:2, title:"Hybrid-form blend shapes", images:[] }
-    ],
-    extraBio:[], bottomSections:[]
-  },
-  { id:3, name:"Onyx Marrow", role:"3D Sculptor", gender:"He/him", tags:["gothic","original"], bio:"Dark academia-inspired designs with hand-sculpted fabric physics and candlelit textures.", status:"unavailable", image:"", portfolio:[], extraBio:[], bottomSections:[] },
-  { id:4, name:"Fable Ashgrove", role:"Texture Artist", gender:"She/her", tags:["cottagecore","nature"], bio:"Painterly hand-drawn textures for woodland and botanical-themed avatars.", status:"available", image:"", portfolio:[], extraBio:[], bottomSections:[] },
-  { id:5, name:"Juno Vellichor", role:"Concept Designer", gender:"They/them", tags:["mecha","scifi"], bio:"Hard-surface mecha shells with functioning panel lights and thruster VFX.", status:"unavailable", image:"", portfolio:[], extraBio:[], bottomSections:[] },
-  { id:6, name:"Wren Isolde", role:"Character Artist", gender:"She/her", tags:["kemono","fantasy"], bio:"Soft-shaded kemono avatars with custom tail and ear physics setups.", status:"available", image:"", portfolio:[], extraBio:[], bottomSections:[] },
-  { id:7, name:"Halcyon Vane", role:"World & Prop Artist", gender:"He/him", tags:["scifi","original"], bio:"Builds companion props and interactive gadgets that pair with any avatar base.", status:"available", image:"", portfolio:[], extraBio:[], bottomSections:[] },
-  { id:8, name:"Marlow Petra", role:"Sculptor", gender:"He/him", tags:["gothic","creature"], bio:"Baroque-inspired horned and winged forms with intricate metal filigree.", status:"unavailable", image:"", portfolio:[], extraBio:[], bottomSections:[] }
+  { id:1, name:"Vesper Kaida", role:"Character Artist", gender:"She/her", tags:["cyberpunk","original"], bio:"Builds neon-lit street-style avatars with a focus on modular armor pieces and animated visor UI.", status:"available", image:"", portfolio:[], extraBio:[], bottomSections:[] }
 ];
 
-// ---------------------------------------------------------
-// Shared persistence helpers (local storage) — browser-only, no
-// server. Data lives only in the browser it was saved in.
-// ---------------------------------------------------------
-const MEMBERS_STORAGE_KEY = 'prism_members_v1';
-
-function loadMembers(){
+async function loadMembers(){
   try{
-    const raw = localStorage.getItem(MEMBERS_STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){ console.warn('Could not read saved members, using defaults.', e); }
-  return JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+    const res = await fetch(`members-data.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  }catch(e){
+    console.warn('Could not fetch members-data.json, using built-in fallback.', e);
+    return JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+  }
 }
 
-function saveMembers(members){
-  localStorage.setItem(MEMBERS_STORAGE_KEY, JSON.stringify(members));
+// Publishes a full replacement of the member list to everyone, by
+// committing it to GitHub through the serverless function. Requires
+// the current 6-digit authenticator code, which is checked again on
+// the server — a stale or wrong code is rejected there even if the
+// browser's own login check already passed.
+async function publishMembers(members, code){
+  const res = await fetch('/.netlify/functions/publish-members', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, members })
+  });
+
+  let body;
+  try{ body = await res.json(); }catch(e){ body = {}; }
+
+  if(!res.ok){
+    throw new Error(body.error || `Publish failed (HTTP ${res.status})`);
+  }
+  return body;
 }

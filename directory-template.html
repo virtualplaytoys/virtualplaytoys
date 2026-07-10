@@ -341,10 +341,10 @@
 
 <!-- Only shown when a valid admin cookie is present (set by admin.html) -->
 <div class="admin-toolbar" id="adminToolbar">
-  <span class="label">⚙ Admin — changes below are staged until you commit</span>
+  <span class="label">⚙ Admin — changes below are staged until you publish</span>
   <div class="actions">
     <button class="btn primary" id="quickAddBtn">+ Add person</button>
-    <button class="btn commit" id="commitBtn" disabled>Commit changes<span class="pending-badge" id="pendingBadge" style="display:none;">0</span></button>
+    <button class="btn commit" id="commitBtn" disabled><span id="commitBtnLabel">Commit changes</span><span class="pending-badge" id="pendingBadge" style="display:none;">0</span></button>
     <a class="btn" href="admin.html">Full editor</a>
     <button class="btn" id="toolbarLogoutBtn">Log out</button>
   </div>
@@ -411,12 +411,15 @@
 
 <script src="members-data.js"></script>
 <script>
+(async () => {
   // ---------------------------------------------------------
   // Admin toolbar — only appears if the "prism_admin_session" cookie
   // is present (set by logging in on admin.html). Add/remove/status
-  // changes made here are staged in memory and only written to local
-  // storage when "Commit changes" is clicked, so a half-finished
-  // editing session can't accidentally overwrite saved data.
+  // changes made here are staged in memory only, and are published
+  // for everyone (committed to GitHub via the publish-members
+  // function) when "Commit changes" is clicked and a valid
+  // authenticator code is entered — so a half-finished editing
+  // session can't accidentally go live.
   // ---------------------------------------------------------
   const ADMIN_SESSION_KEY = 'prism_admin_session';
 
@@ -433,7 +436,7 @@
     return getCookie(ADMIN_SESSION_KEY) === 'true';
   }
 
-  let MEMBERS = loadMembers(); // working copy — see isDirty below
+  let MEMBERS = await loadMembers(); // working copy — see isDirty below
   let isDirty = false;
   let pendingCount = 0;
 
@@ -469,11 +472,32 @@
     document.getElementById('adminToolbar').classList.add('visible');
   }
 
-  document.getElementById('commitBtn').addEventListener('click', () => {
-    MEMBERS.forEach(m => { delete m._dirty; });
-    saveMembers(MEMBERS);
-    clearDirty();
-    render();
+  document.getElementById('commitBtn').addEventListener('click', async () => {
+    const code = prompt('Enter the current 6-digit code from your authenticator app to publish these changes for everyone:');
+    if(!code) return;
+
+    const commitBtn = document.getElementById('commitBtn');
+    const label = document.getElementById('commitBtnLabel');
+    commitBtn.disabled = true;
+    label.textContent = 'Publishing…';
+
+    try{
+      const cleanMembers = MEMBERS.map(m => {
+        const copy = { ...m };
+        delete copy._dirty;
+        return copy;
+      });
+      await publishMembers(cleanMembers, code);
+      MEMBERS.forEach(m => { delete m._dirty; });
+      clearDirty();
+      render();
+      alert('Published! Everyone will see this update once the site finishes redeploying (usually under a minute).');
+    }catch(e){
+      alert(`Couldn't publish: ${e.message}`);
+      commitBtn.disabled = false;
+    }finally{
+      label.textContent = 'Commit changes';
+    }
   });
 
   document.getElementById('toolbarLogoutBtn').addEventListener('click', () => {
@@ -766,6 +790,8 @@
   }
 
   render();
+
+})();
 </script>
 </body>
 </html>

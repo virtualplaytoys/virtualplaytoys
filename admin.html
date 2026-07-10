@@ -447,7 +447,24 @@
 
 <script src="members-data.js"></script>
 <script>
-  let MEMBERS = loadMembers();
+(async () => {
+  let MEMBERS = await loadMembers();
+
+  // Shared helper: prompts for the current authenticator code, publishes
+  // the given member list for everyone, and reports success/failure.
+  // Returns true on success so callers can decide whether to e.g. close
+  // a modal (only do so once the publish actually succeeded).
+  async function publishWithPrompt(members, actionLabel){
+    const code = prompt(`Enter the current 6-digit code from your authenticator app to publish ${actionLabel} for everyone:`);
+    if(!code) return false;
+    try{
+      await publishMembers(members, code);
+      return true;
+    }catch(e){
+      alert(`Couldn't publish: ${e.message}`);
+      return false;
+    }
+  }
 
   // =====================================================================
   // ADMIN AUTH — TOTP (Google Authenticator-compatible), DEMO ONLY
@@ -579,11 +596,29 @@
 
   document.getElementById('logoutBtn').addEventListener('click', () => setLoggedIn(false));
 
-  document.getElementById('restoreDefaultsBtn').addEventListener('click', () => {
-    if(!confirm('Replace all current profiles with the original default set? This cannot be undone.')) return;
-    MEMBERS = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
-    saveMembers(MEMBERS);
-    render();
+  document.getElementById('restoreDefaultsBtn').addEventListener('click', async () => {
+    if(!confirm('Replace all current profiles with the original default set for everyone? This cannot be undone.')) return;
+
+    let defaults;
+    try{
+      const res = await fetch(`members-data.defaults.json?t=${Date.now()}`);
+      defaults = await res.json();
+    }catch(e){
+      alert(`Couldn't load the default data set: ${e.message}`);
+      return;
+    }
+
+    const code = prompt('Enter the current 6-digit code from your authenticator app to publish this restore for everyone:');
+    if(!code) return;
+
+    try{
+      await publishMembers(defaults, code);
+      MEMBERS = defaults;
+      render();
+      alert('Defaults restored and published for everyone.');
+    }catch(e){
+      alert(`Couldn't publish: ${e.message}`);
+    }
   });
 
   // ---------------------------------------------------------
@@ -639,7 +674,7 @@
     reader.readAsDataURL(file);
   });
 
-  profileForm.addEventListener('submit', e => {
+  profileForm.addEventListener('submit', async e => {
     e.preventDefault();
 
     const name = document.getElementById('profileName').value.trim();
@@ -661,6 +696,8 @@
       image: document.getElementById('profileImageData').value || ''
     };
 
+    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
+
     if(editingId !== null){
       const idx = MEMBERS.findIndex(m => m.id === editingId);
       if(idx !== -1) MEMBERS[idx] = { ...MEMBERS[idx], ...data };
@@ -669,17 +706,33 @@
       MEMBERS.push({ id: nextId, ...data, portfolio: [], extraBio: [], bottomSections: [] });
     }
 
-    saveMembers(MEMBERS);
+    const saveBtn = document.getElementById('profileSaveBtn');
+    saveBtn.disabled = true;
+    const ok = await publishWithPrompt(MEMBERS, 'this profile');
+    saveBtn.disabled = false;
+
+    if(!ok){
+      MEMBERS = previousMembers; // don't leave an unpublished edit sitting in memory
+      return;
+    }
+
     render();
     profileOverlay.classList.remove('open');
   });
 
-  function deleteProfile(id){
+  async function deleteProfile(id){
     const member = MEMBERS.find(m => m.id === id);
     if(!member) return;
     if(!confirm(`Delete ${member.name}? This cannot be undone.`)) return;
+
+    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
     MEMBERS = MEMBERS.filter(m => m.id !== id);
-    saveMembers(MEMBERS);
+
+    const ok = await publishWithPrompt(MEMBERS, 'this deletion');
+    if(!ok){
+      MEMBERS = previousMembers;
+      return;
+    }
     render();
   }
 
@@ -722,13 +775,23 @@
     contentOverlay.classList.remove('open');
   });
 
-  document.getElementById('contentSaveBtn').addEventListener('click', () => {
+  document.getElementById('contentSaveBtn').addEventListener('click', async () => {
     const idx = MEMBERS.findIndex(m => m.id === contentMemberId);
-    if(idx !== -1){
-      MEMBERS[idx].portfolio = contentDraft.portfolio;
-      MEMBERS[idx].extraBio = contentDraft.extraBio;
-      MEMBERS[idx].bottomSections = contentDraft.bottomSections;
-      saveMembers(MEMBERS);
+    if(idx === -1) return;
+
+    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
+    MEMBERS[idx].portfolio = contentDraft.portfolio;
+    MEMBERS[idx].extraBio = contentDraft.extraBio;
+    MEMBERS[idx].bottomSections = contentDraft.bottomSections;
+
+    const saveBtn = document.getElementById('contentSaveBtn');
+    saveBtn.disabled = true;
+    const ok = await publishWithPrompt(MEMBERS, "this person's profile content");
+    saveBtn.disabled = false;
+
+    if(!ok){
+      MEMBERS = previousMembers;
+      return;
     }
     contentOverlay.classList.remove('open');
   });
@@ -984,6 +1047,8 @@
   }
 
   updateAuthUI();
+
+})();
 </script>
 </body>
 </html>
