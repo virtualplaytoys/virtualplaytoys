@@ -520,7 +520,8 @@
     const nextId = MEMBERS.reduce((max, m) => Math.max(max, m.id), 0) + 1;
     MEMBERS.push({
       id: nextId, name, role, bio,
-      gender: '', tags: [], status: 'available', link: '#', image: '',
+      gender: '', tags: [], status: 'available', image: '',
+      portfolio: [], extraBio: [], bottomSections: [],
       _dirty: true
     });
     markDirty();
@@ -549,7 +550,7 @@
   function makeItem(memberIndex){
     const m = MEMBERS[memberIndex];
     const a = document.createElement('a');
-    a.href = m.link || '#';
+    a.href = `profile.html?id=${m.id}`;
     a.setAttribute('aria-label', `View ${m.name}'s profile`);
     a.style.position = 'absolute';
     a.style.top = '50%';
@@ -729,10 +730,10 @@
       // Wrap the clickable content in its own link so the delete
       // button and toggle switch (positioned on top) don't trigger
       // navigation when clicked.
-      return `<div class="${cardClasses}">${adminControls}<a href="${m.link || '#'}" style="display:contents;">${inner}</a></div>`;
+      return `<div class="${cardClasses}">${adminControls}<a href="profile.html?id=${m.id}" style="display:contents;">${inner}</a></div>`;
     }
 
-    return `<a class="${cardClasses}" href="${m.link || '#'}">${inner}</a>`;
+    return `<a class="${cardClasses}" href="profile.html?id=${m.id}">${inner}</a>`;
   }
 
   function render(){

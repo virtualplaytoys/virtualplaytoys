@@ -6,15 +6,19 @@
   your repo's root URL.
 - `directory-template.html` — the public catalog page (search, photo
   scroller, member cards). Reached after clicking through the age gate.
-- `admin.html` — the admin login + management panel (add/edit/delete
-  profiles, restore defaults).
+- `profile.html` — individual artist profile pages. One page handles
+  everyone: it reads `?id=` from the URL (e.g. `profile.html?id=3`)
+  and pulls that person's portfolio, bio, and bottom sections from the
+  shared data. You don't create a new file per artist.
+- `admin.html` — the admin login + management panel: add/edit/delete
+  profiles, restore defaults, and manage each artist's profile-page
+  content (portfolio projects, extra bio blocks, bottom sections) via
+  the 🖼 button on each card.
 - `members-data.js` — shared default profile data + local-storage
-  load/save helpers, used by both `directory-template.html` and
-  `admin.html`.
+  load/save helpers, used by all three HTML pages.
 
-**Keep all four files in the same folder/repo root.** They link to
-each other by filename (`index.html` → `directory-template.html` →
-`admin.html`, etc.), so moving one into a subfolder will break those
+**Keep all files in the same folder/repo root.** They link to each
+other by filename, so moving one into a subfolder will break those
 links.
 
 ## Deploying to Netlify (with GitHub as the source repo)

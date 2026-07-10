@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Artist Profile — Prism Collective</title>
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --panel:#181818;
+    --panel-2:#212121;
+    --border:#303030;
+    --text:#f1f1f1;
+    --text-dim:#aaaaaa;
+    --text-faint:#717171;
+    --accent:#3ea6ff;
+    --good:#3ea63e;
+    --bad:#e14545;
+    --font: Arial, Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:14px;
+  }
+  a{ color:var(--accent); text-decoration:none; }
+
+  .box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+
+  .top-nav{ padding:16px 4vw 0; }
+  .top-nav a{ font-size:0.82rem; color:var(--text-faint); }
+  .top-nav a:hover{ color:var(--text-dim); }
+
+  /* ---------- Title header ---------- */
+  .profile-header{
+    padding:18px 4vw 0;
+  }
+  .profile-header.box{
+    max-width:1100px;
+    margin:14px auto 0;
+    padding:22px 26px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .profile-header h1{ font-size:1.8rem; margin:0 0 6px; }
+  .profile-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-size:0.8rem; color:var(--text-faint); }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px; border-radius:999px; border:1px solid var(--border);
+  }
+  .status-pill::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--good); }
+  .status-pill.away::before{ background:var(--bad); }
+  .chip{
+    font-size:0.68rem;
+    padding:2px 9px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    background:var(--panel-2);
+  }
+
+  /* ---------- Two-column layout ---------- */
+  .profile-columns{
+    max-width:1100px;
+    margin:18px auto 0;
+    padding:0 4vw;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:18px;
+    align-items:start;
+  }
+  @media (max-width: 800px){
+    .profile-columns{ grid-template-columns:1fr; }
+  }
+
+  .col-title{
+    font-size:0.95rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+  }
+
+  /* ---------- Portfolio (left) ---------- */
+  .portfolio-item{
+    margin-bottom:12px;
+    overflow:hidden;
+  }
+  .portfolio-item-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .portfolio-item-header h3{ font-size:0.92rem; margin:0; }
+  .portfolio-item-header .caret{
+    font-size:0.75rem;
+    color:var(--text-faint);
+    transition:transform .15s ease;
+    flex-shrink:0;
+  }
+  .portfolio-item.open .caret{ transform:rotate(90deg); }
+  .portfolio-item-body{
+    display:none;
+    padding:0 14px 14px;
+  }
+  .portfolio-item.open .portfolio-item-body{ display:block; }
+  .portfolio-images{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:8px;
+  }
+  .portfolio-images img{
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    border-radius:6px;
+    border:1px solid var(--border);
+    display:block;
+  }
+  .empty-note{ color:var(--text-faint); font-size:0.85rem; padding:14px; }
+
+  /* ---------- Bio (right) ---------- */
+  .bio-text{ font-size:0.92rem; line-height:1.65; color:var(--text-dim); margin:0 0 18px; }
+  .bio-block{
+    margin-bottom:12px;
+    padding:14px 16px;
+  }
+  .bio-block h3{ font-size:0.85rem; margin:0 0 6px; }
+  .bio-block p{ font-size:0.85rem; line-height:1.55; color:var(--text-dim); margin:0; }
+
+  /* ---------- Bottom sections ---------- */
+  .bottom-sections{
+    max-width:1100px;
+    margin:24px auto 60px;
+    padding:0 4vw;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .bottom-item{ overflow:hidden; }
+  .bottom-item-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 16px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .bottom-item-header h3{ font-size:0.9rem; margin:0; }
+  .bottom-item-header .caret{ font-size:0.75rem; color:var(--text-faint); transition:transform .15s ease; }
+  .bottom-item.open .caret{ transform:rotate(90deg); }
+  .bottom-item-body{ display:none; padding:0 16px 16px; }
+  .bottom-item.open .bottom-item-body{ display:block; }
+  .bottom-item-body img{
+    max-width:220px;
+    width:100%;
+    border-radius:6px;
+    border:1px solid var(--border);
+    display:block;
+    margin-bottom:10px;
+  }
+  .bottom-item-body p{ font-size:0.85rem; line-height:1.55; color:var(--text-dim); margin:0; }
+
+  .not-found{
+    max-width:600px;
+    margin:60px auto;
+    padding:30px;
+    text-align:center;
+  }
+  .not-found p{ color:var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <a href="directory-template.html">&laquo; Back to the directory</a>
+</div>
+
+<div id="pageContent"></div>
+
+<script src="members-data.js"></script>
+<script>
+  const MEMBERS = loadMembers();
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id'));
+  const member = MEMBERS.find(m => m.id === id);
+  const content = document.getElementById('pageContent');
+
+  const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
+  function placeholderImg(seed, label){
+    const color = placeholderColors[seed % placeholderColors.length];
+    return `https://placehold.co/500x375/${color}/0a0512?text=${encodeURIComponent(label)}`;
+  }
+
+  if(!member){
+    content.innerHTML = `
+      <div class="not-found box">
+        <h1>Profile not found</h1>
+        <p>This artist doesn't exist, or the link is missing an id. <a href="directory-template.html">Back to the directory &raquo;</a></p>
+      </div>`;
+  }else{
+    renderProfile(member);
+  }
+
+  function renderPortfolio(portfolio){
+    if(!portfolio || portfolio.length === 0){
+      return `<div class="empty-note box">No portfolio pieces added yet.</div>`;
+    }
+
+    // 2 or fewer: show fully open. 3+: collapsed dropdowns (first one open).
+    const forceOpen = portfolio.length <= 2;
+
+    return portfolio.map((p, i) => {
+      const openClass = (forceOpen || i === 0) ? ' open' : '';
+      const images = (p.images && p.images.length)
+        ? p.images.map((src, idx) => `<img src="${src}" alt="${p.title} image ${idx + 1}" loading="lazy" />`).join('')
+        : `<img src="${placeholderImg(i, p.title)}" alt="${p.title} placeholder" loading="lazy" />`;
+
+      return `
+        <div class="portfolio-item box${openClass}" data-portfolio-item>
+          <div class="portfolio-item-header" data-toggle>
+            <h3>${p.title}</h3>
+            <span class="caret">&#9656;</span>
+          </div>
+          <div class="portfolio-item-body">
+            <div class="portfolio-images">${images}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderExtraBio(extraBio){
+    if(!extraBio || extraBio.length === 0) return '';
+    return extraBio.map(b => `
+      <div class="bio-block box">
+        <h3>${b.title}</h3>
+        <p>${b.text}</p>
+      </div>`).join('');
+  }
+
+  function renderBottomSections(sections){
+    if(!sections || sections.length === 0) return '';
+    return sections.map((s, i) => `
+      <div class="bottom-item box" data-bottom-item>
+        <div class="bottom-item-header" data-toggle>
+          <h3>${s.title}</h3>
+          <span class="caret">&#9656;</span>
+        </div>
+        <div class="bottom-item-body">
+          ${s.image ? `<img src="${s.image}" alt="${s.title}" />` : ''}
+          ${s.text ? `<p>${s.text}</p>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function renderProfile(m){
+    document.title = `${m.name} — Prism Collective`;
+
+    content.innerHTML = `
+      <div class="profile-header box">
+        <div>
+          <h1>${m.name}</h1>
+          <div class="profile-meta">
+            <span>${m.role}</span>
+            ${m.gender ? `<span>&middot; ${m.gender}</span>` : ''}
+            <span class="status-pill ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>
+          </div>
+        </div>
+        <div class="card-tags">
+          ${(m.tags || []).map(t => `<span class="chip">${t}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="profile-columns">
+        <div>
+          <p class="col-title">Portfolio</p>
+          ${renderPortfolio(m.portfolio)}
+        </div>
+        <div>
+          <p class="col-title">About</p>
+          <p class="bio-text">${m.bio}</p>
+          ${renderExtraBio(m.extraBio)}
+        </div>
+      </div>
+
+      <div class="bottom-sections">
+        ${renderBottomSections(m.bottomSections)}
+      </div>
+    `;
+
+    content.querySelectorAll('[data-toggle]').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('[data-portfolio-item], [data-bottom-item]').classList.toggle('open');
+      });
+    });
+  }
+</script>
+</body>
+</html>

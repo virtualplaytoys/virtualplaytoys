@@ -50,6 +50,7 @@
   .btn.primary:hover{ filter:brightness(1.08); }
   .btn.danger{ color:var(--bad); border-color:var(--bad); background:transparent; }
   .btn.danger:hover{ background:rgba(225,69,69,0.12); }
+  .btn.small{ padding:4px 10px; font-size:0.72rem; }
 
   /* ---------- Login screen ---------- */
   .login-wrap{
@@ -168,6 +169,82 @@
   }
   .icon-btn:hover{ background:rgba(0,0,0,0.9); }
   .icon-btn.delete:hover{ color:var(--bad); border-color:var(--bad); }
+  .icon-btn.content:hover{ color:var(--accent); border-color:var(--accent); }
+
+  /* ---------- Content manager modal ---------- */
+  .content-modal .modal-box{ max-width:640px; }
+  .content-section{ margin-bottom:22px; }
+  .content-section-title{
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .entry-row{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .entry-row-top{ display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+  .entry-row-top input[type="text"],
+  .entry-row-top textarea{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 10px;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.85rem;
+  }
+  .entry-remove{
+    flex-shrink:0;
+    width:26px; height:26px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--bad);
+    cursor:pointer;
+  }
+  .entry-remove:hover{ background:rgba(225,69,69,0.12); }
+  .entry-images{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+  }
+  .entry-image-thumb{ position:relative; width:64px; height:64px; }
+  .entry-image-thumb img{
+    width:100%; height:100%; object-fit:cover;
+    border-radius:6px; border:1px solid var(--border);
+    display:block;
+  }
+  .entry-image-thumb button{
+    position:absolute; top:-6px; right:-6px;
+    width:18px; height:18px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--bad);
+    font-size:0.65rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .entry-add-image label{
+    display:inline-block;
+    font-size:0.72rem;
+    color:var(--accent);
+    cursor:pointer;
+    margin-top:8px;
+  }
+  .entry-add-image input{ display:none; }
+  .empty-list-note{ font-size:0.8rem; color:var(--text-faint); }
 
   .card-media{
     position:relative;
@@ -317,10 +394,6 @@
         <input type="text" id="profileTags" placeholder="e.g. fantasy, creature" />
       </div>
       <div class="field">
-        <label for="profileLink">Profile link (optional)</label>
-        <input type="text" id="profileLink" placeholder="e.g. members/name.html" />
-      </div>
-      <div class="field">
         <label for="profileImageFile">Picture</label>
         <input type="file" id="profileImageFile" accept="image/*" />
         <p class="field-hint">Leave blank to keep a generated placeholder image.</p>
@@ -333,6 +406,42 @@
         <button type="submit" class="btn primary" id="profileSaveBtn">Save profile</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ---------------- Content manager modal (portfolio / extra bio / bottom sections) ---------------- -->
+<div class="modal-overlay content-modal" id="contentOverlay">
+  <div class="modal-box box">
+    <h2 id="contentModalTitle">Manage content</h2>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Portfolio (left side of profile page)
+        <button type="button" class="btn small" id="addPortfolioBtn">+ Add project</button>
+      </p>
+      <div id="portfolioList"></div>
+    </div>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Extra bio blocks (right side, under the main bio)
+        <button type="button" class="btn small" id="addExtraBioBtn">+ Add block</button>
+      </p>
+      <div id="extraBioList"></div>
+    </div>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Bottom sections (full-width, e.g. watermark or dropdowns)
+        <button type="button" class="btn small" id="addBottomSectionBtn">+ Add section</button>
+      </p>
+      <div id="bottomSectionsList"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn" id="contentCancelBtn">Cancel</button>
+      <button type="button" class="btn primary" id="contentSaveBtn">Save content</button>
+    </div>
   </div>
 </div>
 
@@ -500,7 +609,6 @@
       document.getElementById('profileStatus').value = member.status;
       document.getElementById('profileBio').value = member.bio;
       document.getElementById('profileTags').value = (member.tags || []).join(', ');
-      document.getElementById('profileLink').value = member.link || '';
       if(member.image){
         document.getElementById('profileImageData').value = member.image;
         const preview = document.getElementById('profileImagePreview');
@@ -550,7 +658,6 @@
       name, role, bio, tags,
       gender: document.getElementById('profileGender').value.trim(),
       status: document.getElementById('profileStatus').value,
-      link: document.getElementById('profileLink').value.trim() || '#',
       image: document.getElementById('profileImageData').value || ''
     };
 
@@ -559,7 +666,7 @@
       if(idx !== -1) MEMBERS[idx] = { ...MEMBERS[idx], ...data };
     }else{
       const nextId = MEMBERS.reduce((max, m) => Math.max(max, m.id), 0) + 1;
-      MEMBERS.push({ id: nextId, ...data });
+      MEMBERS.push({ id: nextId, ...data, portfolio: [], extraBio: [], bottomSections: [] });
     }
 
     saveMembers(MEMBERS);
@@ -574,6 +681,237 @@
     MEMBERS = MEMBERS.filter(m => m.id !== id);
     saveMembers(MEMBERS);
     render();
+  }
+
+  // ---------------------------------------------------------
+  // Content manager: portfolio projects, extra bio blocks, and
+  // bottom-of-page sections for one member's profile.html page.
+  // Everything here works on a cloned draft, and is only written back
+  // to MEMBERS (and saved) when "Save content" is clicked — closing
+  // or cancelling discards any in-progress changes.
+  // ---------------------------------------------------------
+  const contentOverlay = document.getElementById('contentOverlay');
+  let contentMemberId = null;
+  let contentDraft = null; // { portfolio: [], extraBio: [], bottomSections: [] }
+
+  function nextEntryId(list){
+    return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+  }
+
+  function fileToDataUrl(file){
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function openContentModal(member){
+    contentMemberId = member.id;
+    contentDraft = {
+      portfolio: JSON.parse(JSON.stringify(member.portfolio || [])),
+      extraBio: JSON.parse(JSON.stringify(member.extraBio || [])),
+      bottomSections: JSON.parse(JSON.stringify(member.bottomSections || []))
+    };
+    document.getElementById('contentModalTitle').textContent = `Manage content — ${member.name}`;
+    renderContentLists();
+    contentOverlay.classList.add('open');
+  }
+
+  document.getElementById('contentCancelBtn').addEventListener('click', () => {
+    contentOverlay.classList.remove('open');
+  });
+
+  document.getElementById('contentSaveBtn').addEventListener('click', () => {
+    const idx = MEMBERS.findIndex(m => m.id === contentMemberId);
+    if(idx !== -1){
+      MEMBERS[idx].portfolio = contentDraft.portfolio;
+      MEMBERS[idx].extraBio = contentDraft.extraBio;
+      MEMBERS[idx].bottomSections = contentDraft.bottomSections;
+      saveMembers(MEMBERS);
+    }
+    contentOverlay.classList.remove('open');
+  });
+
+  // ---- Portfolio ----
+  document.getElementById('addPortfolioBtn').addEventListener('click', () => {
+    contentDraft.portfolio.push({ id: nextEntryId(contentDraft.portfolio), title: 'Untitled project', images: [] });
+    renderContentLists();
+  });
+
+  function portfolioRowTemplate(p){
+    const images = (p.images || []).map((src, imgIdx) => `
+      <div class="entry-image-thumb">
+        <img src="${src}" alt="" />
+        <button type="button" data-remove-image data-project-id="${p.id}" data-image-index="${imgIdx}">✕</button>
+      </div>`).join('');
+
+    return `
+      <div class="entry-row" data-portfolio-id="${p.id}">
+        <div class="entry-row-top">
+          <input type="text" value="${p.title}" data-portfolio-title data-id="${p.id}" placeholder="Project title" />
+          <button type="button" class="entry-remove" data-remove-portfolio data-id="${p.id}" title="Remove project">✕</button>
+        </div>
+        <div class="entry-images">${images}</div>
+        <div class="entry-add-image">
+          <label>+ Add image(s)
+            <input type="file" accept="image/*" multiple data-add-image data-id="${p.id}" />
+          </label>
+        </div>
+      </div>`;
+  }
+
+  // ---- Extra bio blocks ----
+  document.getElementById('addExtraBioBtn').addEventListener('click', () => {
+    contentDraft.extraBio.push({ id: nextEntryId(contentDraft.extraBio), title: 'Untitled', text: '' });
+    renderContentLists();
+  });
+
+  function extraBioRowTemplate(b){
+    return `
+      <div class="entry-row" data-bio-id="${b.id}">
+        <div class="entry-row-top">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <input type="text" value="${b.title}" data-bio-title data-id="${b.id}" placeholder="Block title" />
+            <textarea data-bio-text data-id="${b.id}" placeholder="Text" style="min-height:50px;">${b.text}</textarea>
+          </div>
+          <button type="button" class="entry-remove" data-remove-bio data-id="${b.id}" title="Remove block">✕</button>
+        </div>
+      </div>`;
+  }
+
+  // ---- Bottom sections ----
+  document.getElementById('addBottomSectionBtn').addEventListener('click', () => {
+    contentDraft.bottomSections.push({ id: nextEntryId(contentDraft.bottomSections), title: 'Untitled', image: '', text: '' });
+    renderContentLists();
+  });
+
+  function bottomSectionRowTemplate(s){
+    const imagePreview = s.image
+      ? `<div class="entry-image-thumb"><img src="${s.image}" alt="" /><button type="button" data-remove-bottom-image data-id="${s.id}">✕</button></div>`
+      : `<div class="entry-add-image"><label>+ Add image
+          <input type="file" accept="image/*" data-add-bottom-image data-id="${s.id}" />
+        </label></div>`;
+
+    return `
+      <div class="entry-row" data-bottom-id="${s.id}">
+        <div class="entry-row-top">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <input type="text" value="${s.title}" data-bottom-title data-id="${s.id}" placeholder="Section title" />
+            <textarea data-bottom-text data-id="${s.id}" placeholder="Text (optional)" style="min-height:50px;">${s.text || ''}</textarea>
+          </div>
+          <button type="button" class="entry-remove" data-remove-bottom data-id="${s.id}" title="Remove section">✕</button>
+        </div>
+        ${imagePreview}
+      </div>`;
+  }
+
+  function renderContentLists(){
+    const portfolioList = document.getElementById('portfolioList');
+    const extraBioList = document.getElementById('extraBioList');
+    const bottomList = document.getElementById('bottomSectionsList');
+
+    portfolioList.innerHTML = contentDraft.portfolio.length
+      ? contentDraft.portfolio.map(portfolioRowTemplate).join('')
+      : `<p class="empty-list-note">No projects yet.</p>`;
+
+    extraBioList.innerHTML = contentDraft.extraBio.length
+      ? contentDraft.extraBio.map(extraBioRowTemplate).join('')
+      : `<p class="empty-list-note">No extra bio blocks yet.</p>`;
+
+    bottomList.innerHTML = contentDraft.bottomSections.length
+      ? contentDraft.bottomSections.map(bottomSectionRowTemplate).join('')
+      : `<p class="empty-list-note">No bottom sections yet.</p>`;
+
+    wireContentListEvents();
+  }
+
+  function wireContentListEvents(){
+    // Portfolio
+    document.querySelectorAll('[data-portfolio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-portfolio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.portfolio = contentDraft.portfolio.filter(p => p.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-remove-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(btn.dataset.projectId));
+        if(item) item.images.splice(Number(btn.dataset.imageIndex), 1);
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-add-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(!item) return;
+        const files = [...e.target.files];
+        const dataUrls = await Promise.all(files.map(fileToDataUrl));
+        item.images.push(...dataUrls);
+        renderContentLists();
+      });
+    });
+
+    // Extra bio
+    document.querySelectorAll('[data-bio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.extraBio.find(b => b.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-bio-text]').forEach(textarea => {
+      textarea.addEventListener('input', () => {
+        const item = contentDraft.extraBio.find(b => b.id === Number(textarea.dataset.id));
+        if(item) item.text = textarea.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-bio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.extraBio = contentDraft.extraBio.filter(b => b.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+
+    // Bottom sections
+    document.querySelectorAll('[data-bottom-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-bottom-text]').forEach(textarea => {
+      textarea.addEventListener('input', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(textarea.dataset.id));
+        if(item) item.text = textarea.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-bottom]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.bottomSections = contentDraft.bottomSections.filter(s => s.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-add-bottom-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(!item || !e.target.files[0]) return;
+        item.image = await fileToDataUrl(e.target.files[0]);
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-remove-bottom-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(btn.dataset.id));
+        if(item) item.image = '';
+        renderContentLists();
+      });
+    });
   }
 
   // ---------------------------------------------------------
@@ -602,6 +940,7 @@
       <div class="card box">
         <div class="card-admin-controls">
           <button class="icon-btn edit" title="Edit ${m.name}" data-action="edit" data-id="${m.id}">✎</button>
+          <button class="icon-btn content" title="Manage ${m.name}'s profile page content" data-action="content" data-id="${m.id}">🖼</button>
           <button class="icon-btn delete" title="Delete ${m.name}" data-action="delete" data-id="${m.id}">✕</button>
         </div>
         <div class="card-media">
@@ -632,6 +971,11 @@
     grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
       btn.addEventListener('click', () => {
         openProfileModal(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
+      });
+    });
+    grid.querySelectorAll('[data-action="content"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openContentModal(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
       });
     });
     grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
