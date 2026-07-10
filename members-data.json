@@ -1,21 +1,5 @@
 [
   {
-    "id": 5,
-    "name": "Juno Vellichor",
-    "role": "Concept Designer",
-    "gender": "They/them",
-    "tags": [
-      "mecha",
-      "scifi"
-    ],
-    "bio": "Hard-surface mecha shells with functioning panel lights and thruster VFX.",
-    "status": "unavailable",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 8,
     "name": "Marlow Petra",
     "role": "Sculptor",
