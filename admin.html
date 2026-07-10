@@ -661,17 +661,14 @@
   document.getElementById('addProfileBtn').addEventListener('click', () => openProfileModal(null));
   document.getElementById('profileCancelBtn').addEventListener('click', () => profileOverlay.classList.remove('open'));
 
-  document.getElementById('profileImageFile').addEventListener('change', e => {
+  document.getElementById('profileImageFile').addEventListener('change', async e => {
     const file = e.target.files[0];
     if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      document.getElementById('profileImageData').value = reader.result;
-      const preview = document.getElementById('profileImagePreview');
-      preview.src = reader.result;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    const dataUrl = await resizeImageFile(file);
+    document.getElementById('profileImageData').value = dataUrl;
+    const preview = document.getElementById('profileImagePreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
   });
 
   profileForm.addEventListener('submit', async e => {
@@ -757,10 +754,36 @@
     return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
   }
 
-  function fileToDataUrl(file){
-    return new Promise(resolve => {
+  // Uploaded photos (especially straight from a phone camera) can be
+  // several MB — once base64-encoded that's even bigger, easily past
+  // what the publish function and GitHub's API will accept in one
+  // request (this is what was causing the "HTTP 400" on picture
+  // uploads). This resizes to a reasonable max dimension and
+  // re-compresses as JPEG before it ever becomes a data URL, which
+  // keeps everything comfortably small regardless of the original
+  // photo's size.
+  function resizeImageFile(file, maxDimension = 1000, quality = 0.8){
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > maxDimension || height > maxDimension){
+            const scale = maxDimension / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   }
@@ -921,7 +944,7 @@
         const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
         if(!item) return;
         const files = [...e.target.files];
-        const dataUrls = await Promise.all(files.map(fileToDataUrl));
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f)));
         item.images.push(...dataUrls);
         renderContentLists();
       });
@@ -970,7 +993,7 @@
       input.addEventListener('change', async e => {
         const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
         if(!item || !e.target.files[0]) return;
-        item.image = await fileToDataUrl(e.target.files[0]);
+        item.image = await resizeImageFile(e.target.files[0]);
         renderContentLists();
       });
     });
