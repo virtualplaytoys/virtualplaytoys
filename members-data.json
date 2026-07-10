@@ -38,22 +38,6 @@
     "bottomSections": []
   },
   {
-    "id": 6,
-    "name": "Wren Isolde",
-    "role": "Character Artist",
-    "gender": "She/her",
-    "tags": [
-      "kemono",
-      "fantasy"
-    ],
-    "bio": "Soft-shaded kemono avatars with custom tail and ear physics setups.",
-    "status": "available",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 7,
     "name": "Halcyon Vane",
     "role": "World & Prop Artist",
