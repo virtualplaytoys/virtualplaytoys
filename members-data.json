@@ -38,33 +38,6 @@
     "bottomSections": []
   },
   {
-    "id": 2,
-    "name": "Rin Solace",
-    "role": "Rigger & Animator",
-    "gender": "They/them",
-    "tags": [
-      "fantasy",
-      "creature"
-    ],
-    "bio": "Specializes in expressive custom face rigs for creature and hybrid-form avatars.",
-    "status": "available",
-    "image": "",
-    "portfolio": [
-      {
-        "id": 1,
-        "title": "Creature face rig demo",
-        "images": []
-      },
-      {
-        "id": 2,
-        "title": "Hybrid-form blend shapes",
-        "images": []
-      }
-    ],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 5,
     "name": "Juno Vellichor",
     "role": "Concept Designer",
