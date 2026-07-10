@@ -2,30 +2,42 @@
 // SHARED DATA HELPERS — used by directory-template.html, admin.html,
 // and profile.html.
 // -----------------------------------------------------------------
-// The real, shared-with-everyone data lives in members-data.json in
-// this same repo. loadMembers() fetches it fresh every time (with a
-// cache-busting query param so a browser cache can't show stale data
-// right after a publish).
+// Two layers of data:
 //
-// publishMembers() is how admin.html writes changes back: it calls a
-// Netlify serverless function (netlify/functions/publish-members.js),
-// which verifies your authenticator code SERVER-SIDE (the actual
-// secret never ships to the browser for this step) and, if valid,
-// commits the updated members-data.json straight to your GitHub repo.
-// Netlify then redeploys automatically, and everyone's next page load
-// sees the change — usually within well under a minute.
+// 1. LIVE DATA (members-data.json in this repo) — what everyone sees.
+//    Only changes when someone actually publishes.
 //
-// DEFAULT_MEMBERS below is only a last-resort fallback, used if the
-// fetch fails (e.g. you open these files directly from disk instead
-// of through a real web server, where fetching a local JSON file
-// doesn't work). On a real deployment this fallback should never be
-// needed.
+// 2. LOCAL DRAFT (this browser's local storage) — edits made in
+//    admin.html (add/edit/delete a profile, manage portfolio content,
+//    restore defaults) are staged here instead of published
+//    immediately. This means admin edits don't use up a GitHub API
+//    call/commit until you're actually ready.
+//
+// loadMembers() prefers the local draft if one exists, so both
+// admin.html and directory-template.html show your in-progress edits
+// consistently, on this browser. Once you click "Commit changes" on
+// the public page's admin toolbar, everything staged gets published
+// in ONE commit, and the draft is cleared (so the next load goes back
+// to fetching the now-updated live file).
+//
+// Since the draft lives in local storage, it's specific to this one
+// browser/device — editing from your phone and your laptop won't
+// share a draft between them until one of them publishes.
 // =====================================================================
+const DRAFT_STORAGE_KEY = 'prism_members_draft_v1';
+
 const DEFAULT_MEMBERS = [
   { id:1, name:"Vesper Kaida", role:"Character Artist", gender:"She/her", tags:["cyberpunk","original"], bio:"Builds neon-lit street-style avatars with a focus on modular armor pieces and animated visor UI.", status:"available", image:"", portfolio:[], extraBio:[], bottomSections:[] }
 ];
 
 async function loadMembers(){
+  try{
+    const draft = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if(draft) return JSON.parse(draft);
+  }catch(e){
+    console.warn('Could not read local draft, falling back to live data.', e);
+  }
+
   try{
     const res = await fetch(`members-data.json?t=${Date.now()}`);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -34,6 +46,22 @@ async function loadMembers(){
     console.warn('Could not fetch members-data.json, using built-in fallback.', e);
     return JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
   }
+}
+
+// Stages a change locally — does NOT publish or use up an API call.
+function saveDraft(members){
+  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(members));
+}
+
+function hasDraft(){
+  return localStorage.getItem(DRAFT_STORAGE_KEY) !== null;
+}
+
+// Called after a successful publish, so future page loads go back to
+// fetching the live file (which now matches what was just published)
+// instead of continuing to read the old staged copy.
+function clearDraft(){
+  localStorage.removeItem(DRAFT_STORAGE_KEY);
 }
 
 // Publishes a full replacement of the member list to everyone, by

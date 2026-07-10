@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin — virtualplaytoys</title>
+<title>Admin — VirtualPlayToys</title>
 <style>
   :root{
     --bg:#0f0f0f;
@@ -323,10 +323,10 @@
 <div class="login-wrap" id="loginWrap">
   <div class="login-box box">
     <h1>Admin login</h1>
-    <p class="sub">virtualplaytoys — profile management</p>
+    <p class="sub">VirtualPlayToys — profile management</p>
     <form id="loginForm">
       <div class="field">
-        <label for="loginCode">6-digit code from masters authenticator app</label>
+        <label for="loginCode">6-digit code from your authenticator app</label>
         <input type="text" id="loginCode" inputmode="numeric" pattern="[0-9]*" maxlength="6"
                autocomplete="one-time-code" placeholder="123456" required />
       </div>
@@ -344,11 +344,15 @@
     <h1>⚙ Profile management</h1>
     <div class="actions">
       <button class="btn primary" id="addProfileBtn">+ Add profile</button>
-      <!--<button class="btn" id="restoreDefaultsBtn">Restore defaults</button>-->
+      <button class="btn" id="restoreDefaultsBtn">Restore defaults</button>
       <a class="btn" href="directory-template.html">View public site</a>
       <button class="btn" id="logoutBtn">Log out</button>
     </div>
   </div>
+
+  <p id="draftNotice" style="display:none; font-size:0.82rem; color:#3ea6ff; margin:-10px 0 16px;">
+    You have unpublished changes staged in this browser. Go to the public site and click "Commit changes" to publish them for everyone.
+  </p>
 
   <div class="search box">
     <span>🔍</span>
@@ -371,8 +375,8 @@
         <input type="text" id="profileName" required />
       </div>
       <div class="field">
-        <label for="profileRole">contacts</label>
-        <input type="text" id="profileRole" placeholder="e.g. vrchat username, discord" required />
+        <label for="profileRole">Role / title</label>
+        <input type="text" id="profileRole" placeholder="e.g. Character Artist" required />
       </div>
       <div class="field">
         <label for="profileGender">Gender</label>
@@ -391,7 +395,7 @@
       </div>
       <div class="field">
         <label for="profileTags">Tags (comma-separated)</label>
-        <input type="text" id="profileTags" placeholder="e.g. rape, farel, vanilla, praise " />
+        <input type="text" id="profileTags" placeholder="e.g. fantasy, creature" />
       </div>
       <div class="field">
         <label for="profileImageFile">Picture</label>
@@ -452,24 +456,19 @@
 
   // Shared helper: prompts for the current authenticator code, publishes
   // the given member list for everyone, and reports success/failure.
-  // Returns true on success so callers can decide whether to e.g. close
-  // a modal (only do so once the publish actually succeeded).
-  // Publishes silently: the current code is computed automatically
-  // from ADMIN_TOTP_SECRET (already loaded on this page for the login
-  // check), so publishing never interrupts you to ask for a code —
-  // the code is only ever asked for once, to get into the admin panel
-  // in the first place. The server still checks the code on every
-  // publish, so this isn't a wide-open endpoint; it's just no longer
-  // something you have to type manually each time.
-  async function publishSilently(members){
-    try{
-      const code = await generateTOTP(ADMIN_TOTP_SECRET);
-      await publishMembers(members, code);
-      return true;
-    }catch(e){
-      alert(`Couldn't publish: ${e.message}`);
-      return false;
-    }
+  // Every admin action below stages its change locally (saveDraft)
+  // instead of publishing immediately — this doesn't use up a GitHub
+  // API call/commit. Actual publishing only happens from the "Commit
+  // changes" button in the admin toolbar on the public site
+  // (directory-template.html), which sends everything staged so far
+  // in one single commit.
+  function stageChange(members){
+    saveDraft(members);
+    updateDraftNotice();
+  }
+
+  function updateDraftNotice(){
+    document.getElementById('draftNotice').style.display = hasDraft() ? 'block' : 'none';
   }
 
   // =====================================================================
@@ -582,7 +581,10 @@
     const loggedIn = isLoggedIn();
     document.getElementById('loginWrap').style.display = loggedIn ? 'none' : 'flex';
     document.getElementById('adminShell').classList.toggle('open', loggedIn);
-    if(loggedIn) render();
+    if(loggedIn){
+      render();
+      updateDraftNotice();
+    }
   }
 
   document.getElementById('loginForm').addEventListener('submit', async e => {
@@ -614,11 +616,10 @@
       return;
     }
 
-    const ok = await publishSilently(defaults);
-    if(!ok) return;
     MEMBERS = defaults;
+    stageChange(MEMBERS);
     render();
-    alert('Defaults restored and published for everyone.');
+    alert('Defaults restored locally. Go to the public site and hit "Commit changes" to publish this for everyone.');
   });
 
   // ---------------------------------------------------------
@@ -693,8 +694,6 @@
       image: document.getElementById('profileImageData').value || ''
     };
 
-    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
-
     if(editingId !== null){
       const idx = MEMBERS.findIndex(m => m.id === editingId);
       if(idx !== -1) MEMBERS[idx] = { ...MEMBERS[idx], ...data };
@@ -703,16 +702,7 @@
       MEMBERS.push({ id: nextId, ...data, portfolio: [], extraBio: [], bottomSections: [] });
     }
 
-    const saveBtn = document.getElementById('profileSaveBtn');
-    saveBtn.disabled = true;
-    const ok = await publishSilently(MEMBERS);
-    saveBtn.disabled = false;
-
-    if(!ok){
-      MEMBERS = previousMembers; // don't leave an unpublished edit sitting in memory
-      return;
-    }
-
+    stageChange(MEMBERS);
     render();
     profileOverlay.classList.remove('open');
   });
@@ -722,21 +712,9 @@
     if(!member) return;
     if(!confirm(`Delete ${member.name}? This cannot be undone.`)) return;
 
-    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
     MEMBERS = MEMBERS.filter(m => m.id !== id);
-
-    try{
-      // The current code is computed automatically here (the secret is
-      // already loaded on this page for the login check above), so
-      // deleting only asks "are you sure" instead of also asking you to
-      // type in a fresh code every time.
-      const code = await generateTOTP(ADMIN_TOTP_SECRET);
-      await publishMembers(MEMBERS, code);
-      render();
-    }catch(e){
-      alert(`Couldn't publish: ${e.message}`);
-      MEMBERS = previousMembers;
-    }
+    stageChange(MEMBERS);
+    render();
   }
 
   // ---------------------------------------------------------
@@ -804,24 +782,15 @@
     contentOverlay.classList.remove('open');
   });
 
-  document.getElementById('contentSaveBtn').addEventListener('click', async () => {
+  document.getElementById('contentSaveBtn').addEventListener('click', () => {
     const idx = MEMBERS.findIndex(m => m.id === contentMemberId);
     if(idx === -1) return;
 
-    const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
     MEMBERS[idx].portfolio = contentDraft.portfolio;
     MEMBERS[idx].extraBio = contentDraft.extraBio;
     MEMBERS[idx].bottomSections = contentDraft.bottomSections;
 
-    const saveBtn = document.getElementById('contentSaveBtn');
-    saveBtn.disabled = true;
-    const ok = await publishSilently(MEMBERS);
-    saveBtn.disabled = false;
-
-    if(!ok){
-      MEMBERS = previousMembers;
-      return;
-    }
+    stageChange(MEMBERS);
     contentOverlay.classList.remove('open');
   });
 

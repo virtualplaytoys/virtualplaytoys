@@ -1,4 +1,4 @@
-# Prism Collective — site files
+# VirtualPlayToys — site files
 
 ## Files
 - `index.html` — the 18+ age-verification gate. This is what visitors
@@ -36,18 +36,34 @@ filename, so moving one into a different subfolder will break those
 links.
 
 ## How publishing works now
-Previously, admin changes only saved to your own browser's local
-storage — nobody else could see them. Now, admin actions (adding,
-editing, deleting, restoring defaults, saving portfolio content,
-committing staged changes) call a Netlify serverless function, which:
-1. Checks a 6-digit authenticator code — generated automatically by
-   the page itself using the same secret it already has loaded for
-   the login screen, so you're never asked to type a code for
-   individual actions, only once to get into the admin panel at all.
-2. If valid, commits the updated data straight to `members-data.json`
-   in your GitHub repo.
-3. Netlify sees the new commit and automatically redeploys — usually
-   well under a minute — after which everyone's page shows the update.
+To save on GitHub API calls, admin edits are staged locally in your
+browser first, and only actually published in one batch when you
+choose to:
+
+1. **Editing in `admin.html`** (add/edit/delete a profile, manage
+   portfolio content, restore defaults) saves each change to this
+   browser's local storage. Nothing is committed to GitHub yet — you
+   can make several edits in a row without using up any API calls.
+2. **Publishing happens on the public site** (`directory-template.html`),
+   in the admin toolbar at the top. It shows a "Commit changes" button
+   that lights up whenever there's anything staged (from either the
+   toolbar's own add/remove/toggle controls, or from edits made in
+   `admin.html`). Clicking it sends everything staged so far to the
+   Netlify function in a **single request/commit**, then clears the
+   local staging area.
+3. The function checks a 6-digit authenticator code (generated
+   automatically from the page's own secret — see the note below) and,
+   if valid, commits the update to `members-data.json` in your GitHub
+   repo. Netlify redeploys automatically, usually within a minute.
+
+**Important:** since staged edits live in this browser's local
+storage, they're specific to one browser/device. If you edit from your
+phone and then switch to your laptop before publishing, the laptop
+won't see the phone's staged edits (and vice versa) until one of them
+publishes. For a single-person admin workflow this is usually fine;
+if multiple people need to co-edit before publishing, that would need
+a shared draft store instead of local storage, which is a bigger
+change.
 
 Since the code is generated client-side from a secret embedded in the
 page, this means anyone who can read `admin.html`'s or
@@ -60,7 +76,7 @@ inspecting your site's code. If you want genuine protection against
 that, the fix is to stop embedding the secret in client-side pages at
 all and instead require a manually-typed code (never stored in the
 page) for the publish step specifically. Say the word if you'd like
-that added back for just the "commit" actions.
+that added back for just the "commit" action.
 
 ## Deploying to Netlify (with GitHub as the source repo)
 1. Push everything in this folder — including the `netlify/` subfolder
@@ -123,9 +139,14 @@ that added back for just the "commit" actions.
   runs, but it's checking a code that's no longer a genuine secret,
   since the page can generate it itself. See "How publishing works
   now" above for the tradeoff and how to tighten this back up later.
-- **Everyone shares one dataset now.** There's no more per-browser
-  local copy — `members-data.json` in your repo is the single source
-  of truth for all visitors.
+- **Edits in `admin.html` don't go live until you publish from the
+  public site's toolbar.** This saves API calls, but it means it's
+  easy to forget you have unpublished changes sitting locally — watch
+  for the "You have unpublished changes" notice in `admin.html` and
+  the lit-up "Commit changes" button on the public page.
+- **Staged edits are local to one browser/device**, same as before,
+  but now that applies to `admin.html`'s edits too, not just the
+  public toolbar's quick actions.
 - **Rate limits / commit history** — every publish is a real GitHub
   commit. That's normal and fine for occasional admin edits; it's not
   meant for extremely high-frequency automated writes.

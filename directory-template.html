@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>~*~ virtualplaytoys ~*~ Toy Directory ~*~</title>
+<title>~*~ VirtualPlayToys ~*~ Avatar Directory ~*~</title>
 <style>
   :root{
     --bg:#0f0f0f;
@@ -352,8 +352,8 @@
 
 <div class="header-wrap">
   <header class="box">
-    <h1><span class="sparkle">✦</span> virtualplaytoys <span class="sparkle">✦</span></h1>
-    <p class="lede">A directory of virtual toys. Search by name to find the right night companion.</p>
+    <h1><span class="sparkle">✦</span> VirtualPlayToys <span class="sparkle">✦</span></h1>
+    <p class="lede">A directory of virtual avatar artisans. Search by name to find the right creator for your next avatar.</p>
   </header>
 </div>
 
@@ -373,8 +373,8 @@
 <main class="grid" id="grid"></main>
 
 <footer>
-  <p>© virtualplaytoys</p>
-  <div class="visitor-badge">VISITORS: 281</div>
+  <p>© VirtualPlayToys — a fan-made template, not a real site</p>
+  <div class="visitor-badge">VISITORS: 004,281</div>
   <div><a href="admin.html">Admin</a></div>
 </footer>
 
@@ -499,6 +499,7 @@
     commitBtn.classList.add('dirty');
     badge.style.display = 'inline-block';
     badge.textContent = pendingCount;
+    saveDraft(MEMBERS); // persist so a reload doesn't lose staged edits
   }
 
   function clearDirty(){
@@ -520,6 +521,19 @@
 
   if(isAdmin()){
     document.getElementById('adminToolbar').classList.add('visible');
+
+    if(hasDraft()){
+      // There's unpublished work staged from a previous visit — reflect
+      // that in the toolbar even though we don't know exactly how many
+      // individual edits it represents.
+      isDirty = true;
+      const commitBtn = document.getElementById('commitBtn');
+      const badge = document.getElementById('pendingBadge');
+      commitBtn.disabled = false;
+      commitBtn.classList.add('dirty');
+      badge.style.display = 'inline-block';
+      badge.textContent = '•';
+    }
   }
 
   document.getElementById('commitBtn').addEventListener('click', async () => {
@@ -538,6 +552,7 @@
       await publishMembers(cleanMembers, code);
       MEMBERS.forEach(m => { delete m._dirty; });
       clearDirty();
+      clearDraft(); // future loads (this page and admin.html) go back to fetching the live file
       render();
       alert('Published! Everyone will see this update once the site finishes redeploying (usually under a minute).');
     }catch(e){
