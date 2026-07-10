@@ -944,7 +944,7 @@
         const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
         if(!item) return;
         const files = [...e.target.files];
-        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f)));
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85)));
         item.images.push(...dataUrls);
         renderContentLists();
       });
@@ -993,7 +993,7 @@
       input.addEventListener('change', async e => {
         const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
         if(!item || !e.target.files[0]) return;
-        item.image = await resizeImageFile(e.target.files[0]);
+        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85);
         renderContentLists();
       });
     });
