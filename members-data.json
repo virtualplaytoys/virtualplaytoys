@@ -36,20 +36,5 @@
       }
     ],
     "bottomSections": []
-  },
-  {
-    "id": 2,
-    "name": "1",
-    "role": "1",
-    "bio": "1",
-    "tags": [
-      "1"
-    ],
-    "gender": "1",
-    "status": "available",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
   }
 ]
