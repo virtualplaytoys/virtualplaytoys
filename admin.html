@@ -454,10 +454,16 @@
   // the given member list for everyone, and reports success/failure.
   // Returns true on success so callers can decide whether to e.g. close
   // a modal (only do so once the publish actually succeeded).
-  async function publishWithPrompt(members, actionLabel){
-    const code = prompt(`Enter the current 6-digit code from your authenticator app to publish ${actionLabel} for everyone:`);
-    if(!code) return false;
+  // Publishes silently: the current code is computed automatically
+  // from ADMIN_TOTP_SECRET (already loaded on this page for the login
+  // check), so publishing never interrupts you to ask for a code —
+  // the code is only ever asked for once, to get into the admin panel
+  // in the first place. The server still checks the code on every
+  // publish, so this isn't a wide-open endpoint; it's just no longer
+  // something you have to type manually each time.
+  async function publishSilently(members){
     try{
+      const code = await generateTOTP(ADMIN_TOTP_SECRET);
       await publishMembers(members, code);
       return true;
     }catch(e){
@@ -608,17 +614,11 @@
       return;
     }
 
-    const code = prompt('Enter the current 6-digit code from your authenticator app to publish this restore for everyone:');
-    if(!code) return;
-
-    try{
-      await publishMembers(defaults, code);
-      MEMBERS = defaults;
-      render();
-      alert('Defaults restored and published for everyone.');
-    }catch(e){
-      alert(`Couldn't publish: ${e.message}`);
-    }
+    const ok = await publishSilently(defaults);
+    if(!ok) return;
+    MEMBERS = defaults;
+    render();
+    alert('Defaults restored and published for everyone.');
   });
 
   // ---------------------------------------------------------
@@ -708,7 +708,7 @@
 
     const saveBtn = document.getElementById('profileSaveBtn');
     saveBtn.disabled = true;
-    const ok = await publishWithPrompt(MEMBERS, 'this profile');
+    const ok = await publishSilently(MEMBERS);
     saveBtn.disabled = false;
 
     if(!ok){
@@ -728,12 +728,18 @@
     const previousMembers = JSON.parse(JSON.stringify(MEMBERS));
     MEMBERS = MEMBERS.filter(m => m.id !== id);
 
-    const ok = await publishWithPrompt(MEMBERS, 'this deletion');
-    if(!ok){
+    try{
+      // The current code is computed automatically here (the secret is
+      // already loaded on this page for the login check above), so
+      // deleting only asks "are you sure" instead of also asking you to
+      // type in a fresh code every time.
+      const code = await generateTOTP(ADMIN_TOTP_SECRET);
+      await publishMembers(MEMBERS, code);
+      render();
+    }catch(e){
+      alert(`Couldn't publish: ${e.message}`);
       MEMBERS = previousMembers;
-      return;
     }
-    render();
   }
 
   // ---------------------------------------------------------
@@ -786,7 +792,7 @@
 
     const saveBtn = document.getElementById('contentSaveBtn');
     saveBtn.disabled = true;
-    const ok = await publishWithPrompt(MEMBERS, "this person's profile content");
+    const ok = await publishSilently(MEMBERS);
     saveBtn.disabled = false;
 
     if(!ok){

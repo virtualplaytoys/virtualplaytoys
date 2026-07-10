@@ -417,11 +417,61 @@
   // is present (set by logging in on admin.html). Add/remove/status
   // changes made here are staged in memory only, and are published
   // for everyone (committed to GitHub via the publish-members
-  // function) when "Commit changes" is clicked and a valid
-  // authenticator code is entered — so a half-finished editing
-  // session can't accidentally go live.
+  // function) when "Commit changes" is clicked. The authenticator
+  // code needed for that is generated automatically below — you're
+  // only ever asked to enter a code once, to log into admin.html in
+  // the first place.
   // ---------------------------------------------------------
   const ADMIN_SESSION_KEY = 'prism_admin_session';
+
+  // Must match ADMIN_TOTP_SECRET in admin.html exactly — if you change
+  // one, change both.
+  const ADMIN_TOTP_SECRET = 'JCAGPJB6Q3LRPSLQ';
+
+  function base32Decode(base32){
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for(const char of base32.replace(/=+$/, '').toUpperCase()){
+      const val = alphabet.indexOf(char);
+      if(val === -1) continue;
+      bits += val.toString(2).padStart(5, '0');
+    }
+    const bytes = [];
+    for(let i = 0; i + 8 <= bits.length; i += 8){
+      bytes.push(parseInt(bits.substr(i, 8), 2));
+    }
+    return new Uint8Array(bytes);
+  }
+
+  function counterToBytes(counter){
+    const bytes = new Uint8Array(8);
+    for(let i = 7; i >= 0; i--){
+      bytes[i] = counter & 0xff;
+      counter = Math.floor(counter / 256);
+    }
+    return bytes;
+  }
+
+  async function generateTOTP(secretBase32, atTimeMs = Date.now(), period = 30, digits = 6){
+    const keyBytes = base32Decode(secretBase32);
+    const counter = Math.floor(atTimeMs / 1000 / period);
+    const counterBytes = counterToBytes(counter);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    );
+    const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, counterBytes);
+    const hmac = new Uint8Array(sigBuffer);
+
+    const offset = hmac[hmac.length - 1] & 0x0f;
+    const binCode =
+      ((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff);
+
+    return (binCode % (10 ** digits)).toString().padStart(digits, '0');
+  }
 
   function getCookie(name){
     const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
@@ -473,15 +523,13 @@
   }
 
   document.getElementById('commitBtn').addEventListener('click', async () => {
-    const code = prompt('Enter the current 6-digit code from your authenticator app to publish these changes for everyone:');
-    if(!code) return;
-
     const commitBtn = document.getElementById('commitBtn');
     const label = document.getElementById('commitBtnLabel');
     commitBtn.disabled = true;
     label.textContent = 'Publishing…';
 
     try{
+      const code = await generateTOTP(ADMIN_TOTP_SECRET);
       const cleanMembers = MEMBERS.map(m => {
         const copy = { ...m };
         delete copy._dirty;

@@ -37,19 +37,30 @@ links.
 
 ## How publishing works now
 Previously, admin changes only saved to your own browser's local
-storage — nobody else could see them. Now, clicking "Commit changes" /
-"Save profile" / "Save content" / "Restore defaults" in the admin
-panel calls a Netlify serverless function, which:
-1. Checks your current 6-digit authenticator code — for real, on the
-   server this time, using a secret that never ships to the browser.
+storage — nobody else could see them. Now, admin actions (adding,
+editing, deleting, restoring defaults, saving portfolio content,
+committing staged changes) call a Netlify serverless function, which:
+1. Checks a 6-digit authenticator code — generated automatically by
+   the page itself using the same secret it already has loaded for
+   the login screen, so you're never asked to type a code for
+   individual actions, only once to get into the admin panel at all.
 2. If valid, commits the updated data straight to `members-data.json`
    in your GitHub repo.
 3. Netlify sees the new commit and automatically redeploys — usually
    well under a minute — after which everyone's page shows the update.
 
-You'll be asked for a fresh code at each publish action. That's by
-design: each one is a real commit to your repository, not a quick
-local save.
+Since the code is generated client-side from a secret embedded in the
+page, this means anyone who can read `admin.html`'s or
+`directory-template.html`'s source (i.e. anyone) could, in principle,
+compute a valid code themselves and call the publish function
+directly, bypassing the login screen entirely. The login screen is
+still a real deterrent for casual visitors, but — same as the login
+itself — this is not protection against someone who's actually
+inspecting your site's code. If you want genuine protection against
+that, the fix is to stop embedding the secret in client-side pages at
+all and instead require a manually-typed code (never stored in the
+page) for the publish step specifically. Say the word if you'd like
+that added back for just the "commit" actions.
 
 ## Deploying to Netlify (with GitHub as the source repo)
 1. Push everything in this folder — including the `netlify/` subfolder
@@ -103,9 +114,15 @@ local save.
 - **The page login (entering a code to see the admin panel at all)
   is still a convenience gate, not real security** — that check runs
   in the browser, so it stops casual visitors but not someone who
-  reads the page source. The *actual* protection now lives in the
-  publish step, which is verified server-side and can't be bypassed by
-  reading `admin.html`'s source.
+  reads the page source.
+- **The publish step is now also generated from a client-side secret**,
+  which means it's no stronger than the login gate — someone who reads
+  the page source could compute a valid code and call the publish
+  function directly, without ever logging in through the UI. The
+  server-side check in `publish-members.js` is still real and still
+  runs, but it's checking a code that's no longer a genuine secret,
+  since the page can generate it itself. See "How publishing works
+  now" above for the tradeoff and how to tighten this back up later.
 - **Everyone shares one dataset now.** There's no more per-browser
   local copy — `members-data.json` in your repo is the single source
   of truth for all visitors.
