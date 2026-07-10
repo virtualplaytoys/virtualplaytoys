@@ -1,21 +1,5 @@
 [
   {
-    "id": 8,
-    "name": "Marlow Petra",
-    "role": "Sculptor",
-    "gender": "He/him",
-    "tags": [
-      "gothic",
-      "creature"
-    ],
-    "bio": "Baroque-inspired horned and winged forms with intricate metal filigree.",
-    "status": "unavailable",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 9,
     "name": "Ember Atawhai",
     "role": "@emberatawhai.nz",
