@@ -1,21 +1,5 @@
 [
   {
-    "id": 4,
-    "name": "Fable Ashgrove",
-    "role": "Texture Artist",
-    "gender": "She/her",
-    "tags": [
-      "cottagecore",
-      "nature"
-    ],
-    "bio": "Painterly hand-drawn textures for woodland and botanical-themed avatars.",
-    "status": "available",
-    "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
-  },
-  {
     "id": 5,
     "name": "Juno Vellichor",
     "role": "Concept Designer",
