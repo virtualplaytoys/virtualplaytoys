@@ -36,5 +36,20 @@
       }
     ],
     "bottomSections": []
+  },
+  {
+    "id": 2,
+    "name": "Ember Atawhai",
+    "role": "@emberatawhai.nz",
+    "bio": "I take photos of worlds with the main focus being in the background.",
+    "tags": [
+      "furry-floppa"
+    ],
+    "gender": "He/She/They",
+    "status": "available",
+    "image": "",
+    "portfolio": [],
+    "extraBio": [],
+    "bottomSections": []
   }
 ]
