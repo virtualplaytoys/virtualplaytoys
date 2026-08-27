@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — VirtualPlayToys</title>
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --panel:#181818;
+    --panel-2:#212121;
+    --border:#303030;
+    --text:#f1f1f1;
+    --text-dim:#aaaaaa;
+    --text-faint:#717171;
+    --accent:#3ea6ff;
+    --good:#3ea63e;
+    --bad:#e14545;
+    --font: Arial, Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:14px;
+  }
+
+  a{ color:var(--accent); text-decoration:none; }
+  button{ font-family:var(--font); cursor:pointer; }
+
+  .box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+
+  .btn{
+    font-size:0.8rem;
+    padding:7px 14px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+  }
+  .btn:hover{ background:var(--border); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:bold; }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn.danger{ color:var(--bad); border-color:var(--bad); background:transparent; }
+  .btn.danger:hover{ background:rgba(225,69,69,0.12); }
+  .btn.small{ padding:4px 10px; font-size:0.72rem; }
+
+  /* ---------- Login screen ---------- */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .login-box{
+    max-width:380px;
+    width:100%;
+    padding:28px 26px;
+    text-align:center;
+  }
+  .login-box h1{ font-size:1.3rem; margin:0 0 6px; }
+  .login-box p.sub{ color:var(--text-dim); font-size:0.85rem; margin:0 0 20px; }
+
+  /* ---------- Shared field styles ---------- */
+  .field{ margin-bottom:14px; text-align:left; }
+  .field label{
+    display:block;
+    font-size:0.78rem;
+    color:var(--text-dim);
+    margin-bottom:5px;
+  }
+  .field input[type="text"],
+  .field input[type="password"],
+  .field select,
+  .field textarea{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:9px 10px;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.88rem;
+  }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .field-hint{ font-size:0.7rem; color:var(--text-faint); margin-top:4px; }
+  .field-error{ font-size:0.78rem; color:var(--bad); margin-top:10px; min-height:1em; }
+
+  /* ---------- Admin shell (after login) ---------- */
+  .admin-shell{ display:none; max-width:1100px; margin:0 auto; padding:24px 4vw 60px; }
+  .admin-shell.open{ display:block; }
+
+  .admin-topbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 18px;
+    margin-bottom:20px;
+  }
+  .admin-topbar h1{ font-size:1.2rem; margin:0; }
+  .admin-topbar .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+  .search{
+    flex:1 1 240px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:8px 14px;
+    margin-bottom:18px;
+  }
+  .search input{
+    flex:1;
+    background:none;
+    border:none;
+    outline:none;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.9rem;
+  }
+  .search input::placeholder{ color:var(--text-faint); }
+
+  .result-count{ font-size:0.8rem; color:var(--text-faint); margin-bottom:14px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:16px;
+  }
+
+  .card{
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .card-admin-controls{
+    position:absolute;
+    top:8px; left:8px;
+    z-index:2;
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    width:28px; height:28px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:rgba(0,0,0,0.75);
+    color:var(--text);
+    font-size:0.85rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+  }
+  .icon-btn:hover{ background:rgba(0,0,0,0.9); }
+  .icon-btn.delete:hover{ color:var(--bad); border-color:var(--bad); }
+  .icon-btn.content:hover{ color:var(--accent); border-color:var(--accent); }
+
+  /* ---------- Content manager modal ---------- */
+  .content-modal .modal-box{ max-width:640px; }
+  .content-section{ margin-bottom:22px; }
+  .content-section-title{
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .entry-row{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .entry-row-top{ display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; }
+  .entry-row-top input[type="text"],
+  .entry-row-top textarea{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 10px;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.85rem;
+  }
+  .entry-remove{
+    flex-shrink:0;
+    width:26px; height:26px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--bad);
+    cursor:pointer;
+  }
+  .entry-remove:hover{ background:rgba(225,69,69,0.12); }
+  .entry-images{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+  }
+  .entry-image-thumb{ position:relative; width:64px; height:64px; }
+  .entry-image-thumb img{
+    width:100%; height:100%; object-fit:cover;
+    border-radius:6px; border:1px solid var(--border);
+    display:block;
+  }
+  .entry-image-thumb button{
+    position:absolute; top:-6px; right:-6px;
+    width:18px; height:18px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--bad);
+    font-size:0.65rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .entry-add-image label{
+    display:inline-block;
+    font-size:0.72rem;
+    color:var(--accent);
+    cursor:pointer;
+    margin-top:8px;
+  }
+  .entry-add-image input{ display:none; }
+  .empty-list-note{ font-size:0.8rem; color:var(--text-faint); }
+
+  .card-media{
+    position:relative;
+    aspect-ratio:4/3;
+    overflow:hidden;
+    border-bottom:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  .card-media img{ width:100%; height:100%; object-fit:cover; }
+  .status-dot{
+    position:absolute;
+    top:8px; right:8px;
+    display:flex; align-items:center; gap:5px;
+    font-size:0.65rem;
+    background:rgba(0,0,0,0.75);
+    padding:3px 8px;
+    border-radius:12px;
+    color:var(--text-dim);
+  }
+  .status-dot::before{
+    content:'';
+    width:6px;height:6px;border-radius:50%;
+    background:var(--good);
+    display:inline-block;
+  }
+  .status-dot.away::before{ background:var(--bad); }
+
+  .card-body{ padding:12px 12px 14px; display:flex; flex-direction:column; gap:5px; flex:1; }
+  .card-name{ font-size:1rem; margin:0; font-weight:bold; }
+  .card-role{ font-size:0.7rem; letter-spacing:0.02em; color:var(--text-faint); text-transform:uppercase; }
+  .card-bio{ font-size:0.82rem; line-height:1.45; color:var(--text-dim); margin:0; flex:1; }
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:50px 20px;
+    color:var(--text-faint);
+  }
+
+  /* ---------- Modal (add/edit profile) ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:100;
+    align-items:flex-start;
+    justify-content:center;
+    padding:6vh 16px;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{ max-width:480px; width:100%; padding:22px 22px 24px; }
+  .modal-box h2{ font-size:1.15rem; margin:0 0 16px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+  .image-preview{
+    width:80px; height:80px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    object-fit:cover;
+    display:block;
+    margin-top:8px;
+  }
+
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:0.72rem;
+    color:var(--text-faint);
+  }
+</style>
+</head>
+<body>
+
+<!-- ---------------- Login screen ---------------- -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box box">
+    <h1>Admin login</h1>
+    <p class="sub">VirtualPlayToys — profile management</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginCode">6-digit code from your authenticator app</label>
+        <input type="text" id="loginCode" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               autocomplete="one-time-code" placeholder="123456" required />
+      </div>
+      <div class="field-error" id="loginError"></div>
+      <button type="submit" class="btn primary" style="width:100%;">Log in</button>
+    </form>
+    <p class="field-hint" style="margin-top:16px;"><a href="directory-template.html">&laquo; Back to the public site</a></p>
+    <p class="field-hint" style="margin-top:10px; opacity:0.6;">build <span id="buildKey"></span></p>
+  </div>
+</div>
+
+<!-- ---------------- Admin shell (shown after login) ---------------- -->
+<div class="admin-shell" id="adminShell">
+  <div class="admin-topbar box">
+    <h1>⚙ Profile management</h1>
+    <div class="actions">
+      <button class="btn primary" id="addProfileBtn">+ Add profile</button>
+      <button class="btn" id="restoreDefaultsBtn">Restore defaults</button>
+      <a class="btn" href="directory-template.html">View public site</a>
+      <button class="btn" id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <p id="draftNotice" style="display:none; font-size:0.82rem; color:#3ea6ff; margin:-10px 0 16px;">
+    You have unpublished changes staged in this browser. Go to the public site and click "Commit changes" to publish them for everyone.
+  </p>
+
+  <div class="search box">
+    <span>🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by name..." />
+  </div>
+
+  <div class="result-count" id="resultCount"></div>
+
+  <main class="grid" id="grid"></main>
+</div>
+
+<!-- ---------------- Add / edit profile modal ---------------- -->
+<div class="modal-overlay" id="profileOverlay">
+  <div class="modal-box box">
+    <h2 id="profileModalTitle">Add profile</h2>
+    <form id="profileForm">
+      <input type="hidden" id="profileId" />
+      <div class="field">
+        <label for="profileName">Name</label>
+        <input type="text" id="profileName" required />
+      </div>
+      <div class="field">
+        <label for="profileRole">Role / title</label>
+        <input type="text" id="profileRole" placeholder="e.g. Character Artist" required />
+      </div>
+      <div class="field">
+        <label for="profileGender">Gender</label>
+        <input type="text" id="profileGender" placeholder="e.g. She/her, He/him, They/them" />
+      </div>
+      <div class="field">
+        <label for="profileStatus">Availability</label>
+        <select id="profileStatus">
+          <option value="available">Available</option>
+          <option value="unavailable">Not available</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="profileBio">Bio</label>
+        <textarea id="profileBio" required></textarea>
+      </div>
+      <div class="field">
+        <label for="profileTags">Tags (comma-separated)</label>
+        <input type="text" id="profileTags" placeholder="e.g. fantasy, creature" />
+      </div>
+      <div class="field">
+        <label for="profileImageFile">Picture</label>
+        <input type="file" id="profileImageFile" accept="image/*" />
+        <p class="field-hint">Leave blank to keep a generated placeholder image.</p>
+        <img id="profileImagePreview" class="image-preview" style="display:none;" />
+        <input type="hidden" id="profileImageData" />
+      </div>
+      <div class="field-error" id="profileError"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="profileCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary" id="profileSaveBtn">Save profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ---------------- Content manager modal (portfolio / extra bio / bottom sections) ---------------- -->
+<div class="modal-overlay content-modal" id="contentOverlay">
+  <div class="modal-box box">
+    <h2 id="contentModalTitle">Manage content</h2>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Portfolio (left side of profile page)
+        <button type="button" class="btn small" id="addPortfolioBtn">+ Add project</button>
+      </p>
+      <div id="portfolioList"></div>
+    </div>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Extra bio blocks (right side, under the main bio)
+        <button type="button" class="btn small" id="addExtraBioBtn">+ Add block</button>
+      </p>
+      <div id="extraBioList"></div>
+    </div>
+
+    <div class="content-section">
+      <p class="content-section-title">
+        Bottom sections (full-width, e.g. watermark or dropdowns)
+        <button type="button" class="btn small" id="addBottomSectionBtn">+ Add section</button>
+      </p>
+      <div id="bottomSectionsList"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn" id="contentCancelBtn">Cancel</button>
+      <button type="button" class="btn primary" id="contentSaveBtn">Save content</button>
+    </div>
+  </div>
+</div>
+
+<script src="members-data.js"></script>
+<script>
+(async () => {
+  let MEMBERS = await loadMembers();
+
+  // Shared helper: prompts for the current authenticator code, publishes
+  // the given member list for everyone, and reports success/failure.
+  // Every admin action below stages its change locally (saveDraft)
+  // instead of publishing immediately — this doesn't use up a GitHub
+  // API call/commit. Actual publishing only happens from the "Commit
+  // changes" button in the admin toolbar on the public site
+  // (directory-template.html), which sends everything staged so far
+  // in one single commit.
+  function stageChange(members){
+    saveDraft(members);
+    updateDraftNotice();
+  }
+
+  function updateDraftNotice(){
+    document.getElementById('draftNotice').style.display = hasDraft() ? 'block' : 'none';
+  }
+
+  // =====================================================================
+  // WORKER LOGIN CODES
+  // -----------------------------------------------------------------
+  // Each worker gets their own authenticator code, separate from the
+  // admin one above, so they can log in on the public site and edit
+  // only their own listing. Unlike admin's TOTP secret, worker secrets
+  // are never stored in this file or in members-data.json (which the
+  // public site fetches) — they live server-side only, in a separate
+  // worker-secrets.json written by the save-worker-secret Netlify
+  // function, so a worker's code is never visible to anyone browsing
+  // or viewing source on the site.
+  // =====================================================================
+  async function issueWorkerCode(member){
+    const adminCode = prompt(
+      `Enter your current admin authenticator code to generate a login code for ${member.name}:`
+    );
+    if(!adminCode) return;
+
+    try{
+      const res = await fetch('/.netlify/functions/save-worker-secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminCode, memberId: member.id, memberName: member.name })
+      });
+      const body = await res.json();
+
+      if(!res.ok){
+        alert(`Couldn't generate a code: ${body.error || res.status}`);
+        return;
+      }
+
+      alert(
+        `Give this key to ${member.name} to add to their authenticator app ` +
+        `(Google Authenticator, Authy, etc.) as a manual entry — ` +
+        `label it "VirtualPlayToys: ${member.name}":\n\n` +
+        `${body.secret}\n\n` +
+        `This key will not be shown again here. If it's lost, use ` +
+        `"Regenerate code" to issue a new one (this invalidates the old one).`
+      );
+    }catch(e){
+      alert(`Network error generating code: ${e.message}`);
+    }
+  }
+
+  async function regenerateWorkerCode(member){
+    if(!confirm(`Regenerate ${member.name}'s login code? Their current code will stop working immediately.`)) return;
+    await issueWorkerCode(member);
+  }
+
+  // =====================================================================
+  // ADMIN AUTH — TOTP (Google Authenticator-compatible), DEMO ONLY
+  // -----------------------------------------------------------------
+  // Runs the real RFC 6238 / HOTP-SHA1 algorithm using the browser's
+  // built-in Web Crypto API — no external libraries or network calls
+  // needed to verify a code.
+  //
+  // IMPORTANT: this is still NOT real security. The secret below has
+  // to live in this file for the browser to check codes against it,
+  // so anyone who views this page's source can read the secret and
+  // either compute valid codes themselves or add it to their own
+  // authenticator app. Real protection needs a backend that holds the
+  // secret instead of the browser. Treat this as a "keep casual
+  // visitors out" gate, not real access control.
+  //
+  // TO USE YOUR OWN SECRET:
+  //   1. Generate a random base32 string (16-32 characters, A-Z2-7).
+  //   2. Replace ADMIN_TOTP_SECRET below with it.
+  //   3. Reload — the new key shows up in the plain "build ..." line
+  //      in this page's footer. Enter that manually into Google
+  //      Authenticator / Authy / etc.
+  // =====================================================================
+  const ADMIN_TOTP_SECRET = 'JCAGPJB6Q3LRPSLQ'; // <-- replace with your own
+  const ADMIN_SESSION_KEY = 'prism_admin_session';
+  const SESSION_DAYS = 7; // how long the logged-in cookie lasts
+
+  function setCookie(name, value, days){
+    const maxAge = days * 24 * 60 * 60;
+    document.cookie = `${name}=${value}; max-age=${maxAge}; path=/; samesite=Lax`;
+  }
+
+  function getCookie(name){
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return match ? match[1] : null;
+  }
+
+  function eraseCookie(name){
+    document.cookie = `${name}=; max-age=0; path=/; samesite=Lax`;
+  }
+
+  document.getElementById('buildKey').textContent = ADMIN_TOTP_SECRET.toLowerCase();
+
+  function base32Decode(base32){
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for(const char of base32.replace(/=+$/, '').toUpperCase()){
+      const val = alphabet.indexOf(char);
+      if(val === -1) continue;
+      bits += val.toString(2).padStart(5, '0');
+    }
+    const bytes = [];
+    for(let i = 0; i + 8 <= bits.length; i += 8){
+      bytes.push(parseInt(bits.substr(i, 8), 2));
+    }
+    return new Uint8Array(bytes);
+  }
+
+  function counterToBytes(counter){
+    const bytes = new Uint8Array(8);
+    for(let i = 7; i >= 0; i--){
+      bytes[i] = counter & 0xff;
+      counter = Math.floor(counter / 256);
+    }
+    return bytes;
+  }
+
+  async function generateTOTP(secretBase32, atTimeMs = Date.now(), period = 30, digits = 6){
+    const keyBytes = base32Decode(secretBase32);
+    const counter = Math.floor(atTimeMs / 1000 / period);
+    const counterBytes = counterToBytes(counter);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    );
+    const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, counterBytes);
+    const hmac = new Uint8Array(sigBuffer);
+
+    const offset = hmac[hmac.length - 1] & 0x0f;
+    const binCode =
+      ((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff);
+
+    return (binCode % (10 ** digits)).toString().padStart(digits, '0');
+  }
+
+  async function verifyTOTP(secretBase32, code){
+    const now = Date.now();
+    for(const stepOffset of [0, -1, 1]){
+      const candidate = await generateTOTP(secretBase32, now + stepOffset * 30000);
+      if(candidate === code) return true;
+    }
+    return false;
+  }
+
+  function isLoggedIn(){
+    return getCookie(ADMIN_SESSION_KEY) === 'true';
+  }
+
+  function setLoggedIn(value){
+    if(value) setCookie(ADMIN_SESSION_KEY, 'true', SESSION_DAYS);
+    else eraseCookie(ADMIN_SESSION_KEY);
+    updateAuthUI();
+  }
+
+  function updateAuthUI(){
+    const loggedIn = isLoggedIn();
+    document.getElementById('loginWrap').style.display = loggedIn ? 'none' : 'flex';
+    document.getElementById('adminShell').classList.toggle('open', loggedIn);
+    if(loggedIn){
+      render();
+      updateDraftNotice();
+    }
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = document.getElementById('loginCode').value.trim();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    const valid = await verifyTOTP(ADMIN_TOTP_SECRET, code);
+    submitBtn.disabled = false;
+
+    if(valid){
+      setLoggedIn(true);
+    }else{
+      document.getElementById('loginError').textContent = 'Incorrect or expired code. Try the current code shown in your app.';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => setLoggedIn(false));
+
+  document.getElementById('restoreDefaultsBtn').addEventListener('click', async () => {
+    if(!confirm('Replace all current profiles with the original default set for everyone? This cannot be undone.')) return;
+
+    let defaults;
+    try{
+      const res = await fetch(`members-data.defaults.json?t=${Date.now()}`);
+      defaults = await res.json();
+    }catch(e){
+      alert(`Couldn't load the default data set: ${e.message}`);
+      return;
+    }
+
+    MEMBERS = defaults;
+    stageChange(MEMBERS);
+    render();
+    alert('Defaults restored locally. Go to the public site and hit "Commit changes" to publish this for everyone.');
+  });
+
+  // ---------------------------------------------------------
+  // Add / edit profile modal
+  // ---------------------------------------------------------
+  const profileOverlay = document.getElementById('profileOverlay');
+  const profileForm = document.getElementById('profileForm');
+  let editingId = null;
+
+  function openProfileModal(member){
+    document.getElementById('profileError').textContent = '';
+    profileForm.reset();
+    document.getElementById('profileImagePreview').style.display = 'none';
+    document.getElementById('profileImageData').value = '';
+
+    if(member){
+      editingId = member.id;
+      document.getElementById('profileModalTitle').textContent = 'Edit profile';
+      document.getElementById('profileId').value = member.id;
+      document.getElementById('profileName').value = member.name;
+      document.getElementById('profileRole').value = member.role;
+      document.getElementById('profileGender').value = member.gender || '';
+      document.getElementById('profileStatus').value = member.status;
+      document.getElementById('profileBio').value = member.bio;
+      document.getElementById('profileTags').value = (member.tags || []).join(', ');
+      if(member.image){
+        document.getElementById('profileImageData').value = member.image;
+        const preview = document.getElementById('profileImagePreview');
+        preview.src = member.image;
+        preview.style.display = 'block';
+      }
+    }else{
+      editingId = null;
+      document.getElementById('profileModalTitle').textContent = 'Add profile';
+    }
+
+    profileOverlay.classList.add('open');
+  }
+
+  document.getElementById('addProfileBtn').addEventListener('click', () => openProfileModal(null));
+  document.getElementById('profileCancelBtn').addEventListener('click', () => profileOverlay.classList.remove('open'));
+
+  document.getElementById('profileImageFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const dataUrl = await resizeImageFile(file);
+    document.getElementById('profileImageData').value = dataUrl;
+    const preview = document.getElementById('profileImagePreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+  });
+
+  profileForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const name = document.getElementById('profileName').value.trim();
+    const role = document.getElementById('profileRole').value.trim();
+    const bio = document.getElementById('profileBio').value.trim();
+
+    if(!name || !role || !bio){
+      document.getElementById('profileError').textContent = 'Name, role, and bio are required.';
+      return;
+    }
+
+    const tags = document.getElementById('profileTags').value
+      .split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+
+    const data = {
+      name, role, bio, tags,
+      gender: document.getElementById('profileGender').value.trim(),
+      status: document.getElementById('profileStatus').value,
+      image: document.getElementById('profileImageData').value || ''
+    };
+
+    let newMember = null;
+
+    if(editingId !== null){
+      const idx = MEMBERS.findIndex(m => m.id === editingId);
+      if(idx !== -1) MEMBERS[idx] = { ...MEMBERS[idx], ...data };
+    }else{
+      const nextId = MEMBERS.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+      newMember = { id: nextId, ...data, portfolio: [], extraBio: [], bottomSections: [] };
+      MEMBERS.push(newMember);
+    }
+
+    stageChange(MEMBERS);
+    render();
+    profileOverlay.classList.remove('open');
+
+    // Only brand-new profiles get a worker login code issued.
+    // Editing an existing profile never touches their code.
+    if(newMember){
+      await issueWorkerCode(newMember);
+    }
+  });
+
+  async function deleteProfile(id){
+    const member = MEMBERS.find(m => m.id === id);
+    if(!member) return;
+    if(!confirm(`Delete ${member.name}? This cannot be undone.`)) return;
+
+    MEMBERS = MEMBERS.filter(m => m.id !== id);
+    stageChange(MEMBERS);
+    render();
+  }
+
+  // ---------------------------------------------------------
+  // Content manager: portfolio projects, extra bio blocks, and
+  // bottom-of-page sections for one member's profile.html page.
+  // Everything here works on a cloned draft, and is only written back
+  // to MEMBERS (and saved) when "Save content" is clicked — closing
+  // or cancelling discards any in-progress changes.
+  // ---------------------------------------------------------
+  const contentOverlay = document.getElementById('contentOverlay');
+  let contentMemberId = null;
+  let contentDraft = null; // { portfolio: [], extraBio: [], bottomSections: [] }
+
+  function nextEntryId(list){
+    return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+  }
+
+  // Uploaded photos (especially straight from a phone camera) can be
+  // several MB — once base64-encoded that's even bigger, easily past
+  // what the publish function and GitHub's API will accept in one
+  // request (this is what was causing the "HTTP 400" on picture
+  // uploads). This resizes to a reasonable max dimension and
+  // re-compresses as JPEG before it ever becomes a data URL, which
+  // keeps everything comfortably small regardless of the original
+  // photo's size.
+  function resizeImageFile(file, maxDimension = 1000, quality = 0.8){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > maxDimension || height > maxDimension){
+            const scale = maxDimension / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function openContentModal(member){
+    contentMemberId = member.id;
+    contentDraft = {
+      portfolio: JSON.parse(JSON.stringify(member.portfolio || [])),
+      extraBio: JSON.parse(JSON.stringify(member.extraBio || [])),
+      bottomSections: JSON.parse(JSON.stringify(member.bottomSections || []))
+    };
+    document.getElementById('contentModalTitle').textContent = `Manage content — ${member.name}`;
+    renderContentLists();
+    contentOverlay.classList.add('open');
+  }
+
+  document.getElementById('contentCancelBtn').addEventListener('click', () => {
+    contentOverlay.classList.remove('open');
+  });
+
+  document.getElementById('contentSaveBtn').addEventListener('click', () => {
+    const idx = MEMBERS.findIndex(m => m.id === contentMemberId);
+    if(idx === -1) return;
+
+    MEMBERS[idx].portfolio = contentDraft.portfolio;
+    MEMBERS[idx].extraBio = contentDraft.extraBio;
+    MEMBERS[idx].bottomSections = contentDraft.bottomSections;
+
+    stageChange(MEMBERS);
+    contentOverlay.classList.remove('open');
+  });
+
+  // ---- Portfolio ----
+  document.getElementById('addPortfolioBtn').addEventListener('click', () => {
+    contentDraft.portfolio.push({ id: nextEntryId(contentDraft.portfolio), title: 'Untitled project', images: [] });
+    renderContentLists();
+  });
+
+  function portfolioRowTemplate(p){
+    const images = (p.images || []).map((src, imgIdx) => `
+      <div class="entry-image-thumb">
+        <img src="${src}" alt="" />
+        <button type="button" data-remove-image data-project-id="${p.id}" data-image-index="${imgIdx}">✕</button>
+      </div>`).join('');
+
+    return `
+      <div class="entry-row" data-portfolio-id="${p.id}">
+        <div class="entry-row-top">
+          <input type="text" value="${p.title}" data-portfolio-title data-id="${p.id}" placeholder="Project title" />
+          <button type="button" class="entry-remove" data-remove-portfolio data-id="${p.id}" title="Remove project">✕</button>
+        </div>
+        <div class="entry-images">${images}</div>
+        <div class="entry-add-image">
+          <label>+ Add image(s)
+            <input type="file" accept="image/*" multiple data-add-image data-id="${p.id}" />
+          </label>
+        </div>
+      </div>`;
+  }
+
+  // ---- Extra bio blocks ----
+  document.getElementById('addExtraBioBtn').addEventListener('click', () => {
+    contentDraft.extraBio.push({ id: nextEntryId(contentDraft.extraBio), title: 'Untitled', text: '' });
+    renderContentLists();
+  });
+
+  function extraBioRowTemplate(b){
+    return `
+      <div class="entry-row" data-bio-id="${b.id}">
+        <div class="entry-row-top">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <input type="text" value="${b.title}" data-bio-title data-id="${b.id}" placeholder="Block title" />
+            <textarea data-bio-text data-id="${b.id}" placeholder="Text" style="min-height:50px;">${b.text}</textarea>
+          </div>
+          <button type="button" class="entry-remove" data-remove-bio data-id="${b.id}" title="Remove block">✕</button>
+        </div>
+      </div>`;
+  }
+
+  // ---- Bottom sections ----
+  document.getElementById('addBottomSectionBtn').addEventListener('click', () => {
+    contentDraft.bottomSections.push({ id: nextEntryId(contentDraft.bottomSections), title: 'Untitled', image: '', text: '' });
+    renderContentLists();
+  });
+
+  function bottomSectionRowTemplate(s){
+    const imagePreview = s.image
+      ? `<div class="entry-image-thumb"><img src="${s.image}" alt="" /><button type="button" data-remove-bottom-image data-id="${s.id}">✕</button></div>`
+      : `<div class="entry-add-image"><label>+ Add image
+          <input type="file" accept="image/*" data-add-bottom-image data-id="${s.id}" />
+        </label></div>`;
+
+    return `
+      <div class="entry-row" data-bottom-id="${s.id}">
+        <div class="entry-row-top">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <input type="text" value="${s.title}" data-bottom-title data-id="${s.id}" placeholder="Section title" />
+            <textarea data-bottom-text data-id="${s.id}" placeholder="Text (optional)" style="min-height:50px;">${s.text || ''}</textarea>
+          </div>
+          <button type="button" class="entry-remove" data-remove-bottom data-id="${s.id}" title="Remove section">✕</button>
+        </div>
+        ${imagePreview}
+      </div>`;
+  }
+
+  function renderContentLists(){
+    const portfolioList = document.getElementById('portfolioList');
+    const extraBioList = document.getElementById('extraBioList');
+    const bottomList = document.getElementById('bottomSectionsList');
+
+    portfolioList.innerHTML = contentDraft.portfolio.length
+      ? contentDraft.portfolio.map(portfolioRowTemplate).join('')
+      : `<p class="empty-list-note">No projects yet.</p>`;
+
+    extraBioList.innerHTML = contentDraft.extraBio.length
+      ? contentDraft.extraBio.map(extraBioRowTemplate).join('')
+      : `<p class="empty-list-note">No extra bio blocks yet.</p>`;
+
+    bottomList.innerHTML = contentDraft.bottomSections.length
+      ? contentDraft.bottomSections.map(bottomSectionRowTemplate).join('')
+      : `<p class="empty-list-note">No bottom sections yet.</p>`;
+
+    wireContentListEvents();
+  }
+
+  function wireContentListEvents(){
+    // Portfolio
+    document.querySelectorAll('[data-portfolio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-portfolio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.portfolio = contentDraft.portfolio.filter(p => p.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-remove-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(btn.dataset.projectId));
+        if(item) item.images.splice(Number(btn.dataset.imageIndex), 1);
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-add-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(!item) return;
+        const files = [...e.target.files];
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85)));
+        item.images.push(...dataUrls);
+        renderContentLists();
+      });
+    });
+
+    // Extra bio
+    document.querySelectorAll('[data-bio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.extraBio.find(b => b.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-bio-text]').forEach(textarea => {
+      textarea.addEventListener('input', () => {
+        const item = contentDraft.extraBio.find(b => b.id === Number(textarea.dataset.id));
+        if(item) item.text = textarea.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-bio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.extraBio = contentDraft.extraBio.filter(b => b.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+
+    // Bottom sections
+    document.querySelectorAll('[data-bottom-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-bottom-text]').forEach(textarea => {
+      textarea.addEventListener('input', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(textarea.dataset.id));
+        if(item) item.text = textarea.value;
+      });
+    });
+    document.querySelectorAll('[data-remove-bottom]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        contentDraft.bottomSections = contentDraft.bottomSections.filter(s => s.id !== Number(btn.dataset.id));
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-add-bottom-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(!item || !e.target.files[0]) return;
+        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85);
+        renderContentLists();
+      });
+    });
+    document.querySelectorAll('[data-remove-bottom-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(btn.dataset.id));
+        if(item) item.image = '';
+        renderContentLists();
+      });
+    });
+  }
+
+  // ---------------------------------------------------------
+  // Grid render (management list — always shows edit/delete, since
+  // this whole page is already behind the login gate above)
+  // ---------------------------------------------------------
+  const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
+
+  function placeholderImg(seed, label){
+    const color = placeholderColors[seed % placeholderColors.length];
+    return `https://placehold.co/220x220/${color}/0a0512?text=${encodeURIComponent(label)}`;
+  }
+
+  function imageFor(member, seed){
+    return member.image || placeholderImg(seed, member.name.split(' ')[0]);
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  const grid = document.getElementById('grid');
+  const resultCount = document.getElementById('resultCount');
+  searchInput.addEventListener('input', render);
+
+  function cardTemplate(m, idx){
+    const img = imageFor(m, idx);
+    return `
+      <div class="card box">
+        <div class="card-admin-controls">
+          <button class="icon-btn edit" title="Edit ${m.name}" data-action="edit" data-id="${m.id}">✎</button>
+          <button class="icon-btn content" title="Manage ${m.name}'s profile page content" data-action="content" data-id="${m.id}">🖼</button>
+          <button class="icon-btn" title="Regenerate ${m.name}'s worker login code" data-action="regen-code" data-id="${m.id}">🔑</button>
+          <button class="icon-btn delete" title="Delete ${m.name}" data-action="delete" data-id="${m.id}">✕</button>
+        </div>
+        <div class="card-media">
+          <img src="${img}" alt="${m.name}" loading="lazy" />
+          <span class="status-dot ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>
+        </div>
+        <div class="card-body">
+          <p class="card-role">${m.role}</p>
+          <h3 class="card-name">${m.name}</h3>
+          <p class="card-bio">${m.bio}</p>
+        </div>
+      </div>`;
+  }
+
+  function render(){
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = MEMBERS.filter(m => !q || m.name.toLowerCase().includes(q));
+
+    resultCount.textContent = `${filtered.length} member${filtered.length === 1 ? '' : 's'}`;
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state">No members match that search.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(m => cardTemplate(m, MEMBERS.indexOf(m))).join('');
+
+    grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openProfileModal(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
+      });
+    });
+    grid.querySelectorAll('[data-action="content"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openContentModal(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
+      });
+    });
+    grid.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', () => deleteProfile(Number(btn.dataset.id)));
+    });
+    grid.querySelectorAll('[data-action="regen-code"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        regenerateWorkerCode(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
+      });
+    });
+  }
+
+  updateAuthUI();
+
+})();
+</script>
+</body>
+</html>

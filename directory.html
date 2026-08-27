@@ -5,341 +5,359 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>~*~ VirtualPlayToys ~*~ Avatar Directory ~*~</title>
 <style>
-  :root{
-    --bg:#0f0f0f;
-    --panel:#181818;
-    --panel-2:#212121;
-    --border:#303030;
-    --text:#f1f1f1;
-    --text-dim:#aaaaaa;
-    --text-faint:#717171;
-    --accent:#3ea6ff;
-    --link:#3ea6ff;
-    --good:#3ea63e;
-    --bad:#e14545;
-    --font: Arial, Helvetica, sans-serif;
-  }
-
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--font);
-    font-size:14px;
-  }
-
-  a{color:var(--link);text-decoration:none;}
-
-  .box{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:8px;
-  }
-
-  /* ---------- Header ---------- */
-  .header-wrap{ padding:20px 4vw 10px; }
-  header.box{
-    max-width:900px;
-    margin:0 auto;
-    padding:22px 24px;
-  }
-  h1{
-    font-size:1.6rem;
-    margin:0 0 8px;
-    color:var(--text);
-    font-weight:bold;
-  }
-  header p.lede{
-    max-width:65ch;
-    margin:0;
-    color:var(--text-dim);
-    font-size:0.92rem;
-    line-height:1.55;
-  }
-
-  /* ---------- Photo scroller ---------- */
-  .marquee-shell.box{
-    position:relative;
-    height:180px;
-    overflow:hidden;
-    margin:16px 4vw;
-  }
-  .marquee-track{
-    position:absolute;
-    top:0; left:0;
-    height:100%;
-    width:100%;
-  }
-  .marquee-track a{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    display:block;
-    cursor:pointer;
-  }
-  .marquee-track img{
-    display:block;
-    height:150px;
-    width:auto;
-    border-radius:6px;
-    border:1px solid var(--border);
-    transition:border-color .15s ease;
-  }
-  .marquee-track a:hover img{
-    border-color:var(--text-faint);
-  }
-
-  /* ---------- Controls ---------- */
-  .controls{
-    margin:20px 4vw 0;
-    padding:14px 16px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    align-items:center;
-  }
-  .search{
-    flex:1 1 240px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    background:var(--bg);
-    border:1px solid var(--border);
-    border-radius:20px;
-    padding:8px 14px;
-  }
-  .search input{
-    flex:1;
-    background:none;
-    border:none;
-    outline:none;
-    color:var(--text);
-    font-family:var(--font);
-    font-size:0.9rem;
-  }
-  .search input::placeholder{color:var(--text-faint);}
-
-  .result-count{
-    margin:12px 4vw 0;
-    font-size:0.8rem;
-    color:var(--text-faint);
-  }
-
-  /* ---------- Grid ---------- */
-  .grid{
-    padding:14px 4vw 60px;
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
-    gap:18px;
-  }
-
-  .card{
-    padding:0;
-    display:flex;
-    flex-direction:column;
-    overflow:hidden;
-  }
-  .card:hover{ border-color:var(--text-faint); }
-
-  .card-media{
-    position:relative;
-    aspect-ratio:4/3;
-    overflow:hidden;
-    border-bottom:1px solid var(--border);
-    background:var(--panel-2);
-  }
-  .card-media img{ width:100%; height:100%; object-fit:cover; }
-  .status-dot{
-    position:absolute;
-    top:8px; right:8px;
-    display:flex; align-items:center; gap:5px;
-    font-size:0.65rem;
-    background:rgba(0,0,0,0.75);
-    padding:3px 8px;
-    border-radius:12px;
-    color:var(--text-dim);
-  }
-  .status-dot::before{
-    content:'';
-    width:6px;height:6px;border-radius:50%;
-    background:var(--good);
-    display:inline-block;
-  }
-  .status-dot.away::before{ background:var(--bad); }
-
-  .card-body{ padding:14px 14px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
-  .card-name{
-    font-size:1.05rem;
-    margin:0;
-    color:var(--text);
-    font-weight:bold;
-  }
-  .card-role{
-    font-size:0.72rem;
-    letter-spacing:0.02em;
-    color:var(--text-faint);
-    text-transform:uppercase;
-  }
-  .card-gender{
-    font-size:0.72rem;
-    color:var(--text-faint);
-  }
-  .card-bio{ font-size:0.85rem; line-height:1.5; color:var(--text-dim); margin:0; flex:1; }
-  .card-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
-  .chip{
-    font-size:0.68rem;
-    padding:2px 9px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    color:var(--text-dim);
-    background:var(--panel-2);
-  }
-  .card-cta{
-    margin-top:8px;
-    font-size:0.82rem;
-    color:var(--accent);
-    text-align:center;
-    padding:7px;
-    border-radius:16px;
-    border:1px solid var(--border);
-    background:var(--panel-2);
-  }
-  .card-cta:hover{ background:var(--border); }
-
-  .empty-state{
-    grid-column:1/-1;
-    text-align:center;
-    padding:50px 20px;
-    color:var(--text-faint);
-  }
-
-  /* ---------- Footer ---------- */
-  footer{
-    text-align:center;
-    padding:20px;
-    font-size:0.75rem;
-    color:var(--text-faint);
-    border-top:1px solid var(--border);
-  }
-  .visitor-badge{
-    display:inline-block;
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    border-radius:6px;
-    padding:5px 12px;
-    color:var(--text-dim);
-    font-family:'Courier New',monospace;
-    margin-top:8px;
-  }
-
-  /* ---------- Admin toolbar (only visible with a valid admin cookie) ---------- */
-  .admin-toolbar{
-    display:none;
-    position:sticky;
-    top:0;
-    z-index:50;
-    background:var(--panel-2);
-    border-bottom:1px solid var(--accent);
-    padding:10px 4vw;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-  .admin-toolbar.visible{ display:flex; }
-  .admin-toolbar .label{
-    font-size:0.78rem;
-    color:var(--accent);
-    font-weight:bold;
-    white-space:nowrap;
-  }
-  .admin-toolbar .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .btn{
-    font-size:0.8rem;
-    padding:7px 14px;
-    border-radius:16px;
-    border:1px solid var(--border);
-    background:var(--panel);
-    color:var(--text);
-    cursor:pointer;
-    font-family:var(--font);
-  }
-  .btn:hover{ background:var(--border); }
-  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:bold; }
-  .btn.primary:hover{ filter:brightness(1.08); }
-  .btn.commit{ position:relative; }
-  .btn.commit.dirty{ background:var(--good); border-color:var(--good); color:#052905; font-weight:bold; }
-  .btn.commit:disabled{ opacity:0.5; cursor:default; }
-  .btn[disabled]{ opacity:0.5; cursor:default; }
-  .pending-badge{
-    font-size:0.68rem;
-    background:var(--bad);
-    color:#fff;
-    border-radius:999px;
-    padding:1px 7px;
-    margin-left:6px;
-  }
-
-  /* ---------- Admin controls on cards ---------- */
-  .card-admin-controls{
-    position:absolute;
-    top:8px; left:8px;
-    z-index:2;
-    display:flex;
-    gap:6px;
-    align-items:center;
-  }
-  .icon-btn{
-    width:26px; height:26px;
-    border-radius:6px;
-    border:1px solid var(--border);
-    background:rgba(0,0,0,0.8);
-    color:var(--text);
-    font-size:0.8rem;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    line-height:1;
-    cursor:pointer;
-  }
-  .icon-btn:hover{ background:rgba(0,0,0,0.95); }
-  .icon-btn.delete:hover{ color:var(--bad); border-color:var(--bad); }
-
-  .switch{
-    position:relative;
-    display:inline-block;
-    width:34px; height:18px;
-    cursor:pointer;
-  }
-  .switch input{ display:none; }
-  .switch .track{
-    position:absolute; inset:0;
-    background:var(--bad);
-    border-radius:999px;
-    transition:background .15s ease;
-  }
-  .switch input:checked + .track{ background:var(--good); }
-  .switch .thumb{
-    position:absolute;
-    top:2px; left:2px;
-    width:14px; height:14px;
-    background:#fff;
-    border-radius:50%;
-    transition:transform .15s ease;
-  }
-  .switch input:checked ~ .thumb{ transform:translateX(16px); }
-
-  .card.dirty{ outline:2px solid var(--accent); outline-offset:-1px; }
-
-  @media (prefers-reduced-motion: reduce){
-    .marquee-track img{ transition:none; }
-  }
+:root{
+  --bg:#0f0f0f;
+  --panel:#181818;
+  --panel-2:#212121;
+  --border:#303030;
+  --text:#f1f1f1;
+  --text-dim:#aaaaaa;
+  --text-faint:#717171;
+  --accent:#3ea6ff;
+  --link:#3ea6ff;
+  --good:#3ea63e;
+  --bad:#e14545;
+  --font: Arial, Helvetica, sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:14px;
+}
+a{color:var(--link);text-decoration:none;}
+.box{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+.header-wrap{ padding:20px 4vw 10px; }
+header.box{
+  max-width:900px;
+  margin:0 auto;
+  padding:22px 24px;
+}
+h1{
+  font-size:1.6rem;
+  margin:0 0 8px;
+  color:var(--text);
+  font-weight:bold;
+}
+header p.lede{
+  max-width:65ch;
+  margin:0;
+  color:var(--text-dim);
+  font-size:0.92rem;
+  line-height:1.55;
+}
+.marquee-shell.box{
+  position:relative;
+  height:180px;
+  overflow:hidden;
+  margin:16px 4vw;
+}
+.marquee-track{
+  position:absolute;
+  top:0; left:0;
+  height:100%;
+  width:100%;
+}
+.marquee-track a{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  display:block;
+  cursor:pointer;
+}
+.marquee-track img{
+  display:block;
+  height:150px;
+  width:auto;
+  border-radius:6px;
+  border:1px solid var(--border);
+  transition:border-color .15s ease;
+}
+.marquee-track a:hover img{
+  border-color:var(--text-faint);
+}
+.controls{
+  margin:20px 4vw 0;
+  padding:14px 16px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+}
+.search{
+  flex:1 1 240px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:8px 14px;
+}
+.search input{
+  flex:1;
+  background:none;
+  border:none;
+  outline:none;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:0.9rem;
+}
+.search input::placeholder{color:var(--text-faint);}
+.result-count{
+  margin:12px 4vw 0;
+  font-size:0.8rem;
+  color:var(--text-faint);
+}
+.grid{
+  padding:14px 4vw 60px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+  gap:18px;
+}
+.card{
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.card:hover{ border-color:var(--text-faint); }
+.card-media{
+  position:relative;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border-bottom:1px solid var(--border);
+  background:var(--panel-2);
+}
+.card-media img{ width:100%; height:100%; object-fit:cover; }
+.status-dot{
+  position:absolute;
+  top:8px; right:8px;
+  display:flex; align-items:center; gap:5px;
+  font-size:0.65rem;
+  background:rgba(0,0,0,0.75);
+  padding:3px 8px;
+  border-radius:12px;
+  color:var(--text-dim);
+}
+.status-dot::before{
+  content:'';
+  width:6px;height:6px;border-radius:50%;
+  background:var(--good);
+  display:inline-block;
+}
+.status-dot.away::before{ background:var(--bad); }
+.card-body{ padding:14px 14px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+.card-name{
+  font-size:1.05rem;
+  margin:0;
+  color:var(--text);
+  font-weight:bold;
+}
+.card-role{
+  font-size:0.72rem;
+  letter-spacing:0.02em;
+  color:var(--text-faint);
+  text-transform:uppercase;
+}
+.card-gender{
+  font-size:0.72rem;
+  color:var(--text-faint);
+}
+.card-bio{ font-size:0.85rem; line-height:1.5; color:var(--text-dim); margin:0; flex:1; }
+.card-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+.chip{
+  font-size:0.68rem;
+  padding:2px 9px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  color:var(--text-dim);
+  background:var(--panel-2);
+}
+.card-cta{
+  margin-top:8px;
+  font-size:0.82rem;
+  color:var(--accent);
+  text-align:center;
+  padding:7px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--panel-2);
+}
+.card-cta:hover{ background:var(--border); }
+.empty-state{
+  grid-column:1/-1;
+  text-align:center;
+  padding:50px 20px;
+  color:var(--text-faint);
+}
+footer{
+  text-align:center;
+  padding:20px;
+  font-size:0.75rem;
+  color:var(--text-faint);
+  border-top:1px solid var(--border);
+}
+.visitor-badge{
+  display:inline-block;
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:5px 12px;
+  color:var(--text-dim);
+  font-family:'Courier New',monospace;
+  margin-top:8px;
+}
+.footer-link-btn{
+  background:none;
+  border:none;
+  color:var(--link);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:inherit;
+  padding:0;
+}
+.admin-toolbar{
+  display:none;
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:var(--panel-2);
+  border-bottom:1px solid var(--accent);
+  padding:10px 4vw;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.admin-toolbar.visible{ display:flex; }
+.admin-toolbar .label{
+  font-size:0.78rem;
+  color:var(--accent);
+  font-weight:bold;
+  white-space:nowrap;
+}
+.admin-toolbar .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.btn{
+  font-size:0.8rem;
+  padding:7px 14px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  color:var(--text);
+  cursor:pointer;
+  font-family:var(--font);
+}
+.btn:hover{ background:var(--border); }
+.btn.primary{ background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:bold; }
+.btn.primary:hover{ filter:brightness(1.08); }
+.btn.commit{ position:relative; }
+.btn.commit.dirty{ background:var(--good); border-color:var(--good); color:#052905; font-weight:bold; }
+.btn.commit:disabled{ opacity:0.5; cursor:default; }
+.btn[disabled]{ opacity:0.5; cursor:default; }
+.pending-badge{
+  font-size:0.68rem;
+  background:var(--bad);
+  color:#fff;
+  border-radius:999px;
+  padding:1px 7px;
+  margin-left:6px;
+}
+.card-admin-controls{
+  position:absolute;
+  top:8px; left:8px;
+  z-index:2;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.icon-btn{
+  width:26px; height:26px;
+  border-radius:6px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.8);
+  color:var(--text);
+  font-size:0.8rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  cursor:pointer;
+}
+.icon-btn:hover{ background:rgba(0,0,0,0.95); }
+.icon-btn.delete:hover{ color:var(--bad); border-color:var(--bad); }
+.switch{
+  position:relative;
+  display:inline-block;
+  width:34px; height:18px;
+  cursor:pointer;
+}
+.switch input{ display:none; }
+.switch .track{
+  position:absolute; inset:0;
+  background:var(--bad);
+  border-radius:999px;
+  transition:background .15s ease;
+}
+.switch input:checked + .track{ background:var(--good); }
+.switch .thumb{
+  position:absolute;
+  top:2px; left:2px;
+  width:14px; height:14px;
+  background:#fff;
+  border-radius:50%;
+  transition:transform .15s ease;
+}
+.switch input:checked ~ .thumb{ transform:translateX(16px); }
+.card.dirty{ outline:2px solid var(--accent); outline-offset:-1px; }
+.modal-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  z-index:100;
+  align-items:flex-start;
+  justify-content:center;
+  padding:6vh 16px;
+  overflow-y:auto;
+}
+.field{ margin-bottom:12px; text-align:left; }
+.field label{
+  display:block;
+  font-size:0.78rem;
+  color:var(--text-dim);
+  margin-bottom:5px;
+}
+.field input[type="text"],
+.field select,
+.field textarea{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:9px 10px;
+  color:var(--text);
+  font-family:var(--font);
+  font-size:0.9rem;
+}
+.field textarea{ min-height:80px; resize:vertical; }
+.field-error{ font-size:0.78rem; color:var(--bad); margin-bottom:10px; min-height:1em; }
+.field-success{ font-size:0.78rem; color:var(--good); margin-bottom:10px; min-height:1em; }
+@media (prefers-reduced-motion: reduce){
+  .marquee-track img{ transition:none; }
+}
 </style>
 </head>
 <body>
 
-<!-- Only shown when a valid admin cookie is present (set by admin.html) -->
 <div class="admin-toolbar" id="adminToolbar">
   <span class="label">⚙ Admin — changes below are staged until you publish</span>
   <div class="actions">
@@ -375,12 +393,10 @@
 <footer>
   <p>© VirtualPlayToys</p>
   <div class="visitor-badge">VISITORS: 004,281</div>
-  <div><a href="admin.html">Admin</a></div>
+  <div><button class="footer-link-btn" id="workerLoginLink">Worker Login</button></div>
 </footer>
 
-<!-- Quick add — minimal fields; full editing (image, gender, tags, link)
-     still happens in admin.html after this person is committed. -->
-<div class="modal-overlay" id="quickAddOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-start; justify-content:center; padding:6vh 16px; overflow-y:auto;">
+<div class="modal-overlay" id="quickAddOverlay">
   <div class="box" style="max-width:420px; width:100%; padding:20px;">
     <h2 style="font-size:1.1rem; margin:0 0 14px;">Quick add person</h2>
     <form id="quickAddForm">
@@ -409,23 +425,65 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="workerLoginOverlay">
+  <div class="box" style="max-width:420px; width:100%; padding:22px 22px 24px;">
+
+    <div id="workerLoginStep">
+      <h2 style="font-size:1.1rem; margin:0 0 14px;">Worker login</h2>
+      <p style="font-size:0.82rem; color:var(--text-dim); margin:0 0 14px;">
+        Enter the 6-digit code from your authenticator app.
+      </p>
+      <div class="field">
+        <input type="text" id="workerCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               autocomplete="one-time-code" placeholder="123456" />
+      </div>
+      <div class="field-error" id="workerLoginError"></div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn" id="workerLoginCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="workerLoginSubmitBtn">Log in</button>
+      </div>
+    </div>
+
+    <div id="workerEditStep" style="display:none;">
+      <h2 style="font-size:1.1rem; margin:0 0 4px;" id="workerEditTitle">Edit your profile</h2>
+      <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 16px;">
+        Changes save immediately — no separate "publish" step for your own edits.
+      </p>
+
+      <div class="field">
+        <label for="workerEditStatus">Availability</label>
+        <select id="workerEditStatus">
+          <option value="available">Available</option>
+          <option value="unavailable">Not available</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="workerEditBio">Bio</label>
+        <textarea id="workerEditBio"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="workerEditTags">Tags (comma-separated)</label>
+        <input type="text" id="workerEditTags" />
+      </div>
+
+      <div class="field-error" id="workerSaveError"></div>
+      <div class="field-success" id="workerSaveSuccess"></div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn" id="workerLogoutBtn">Log out</button>
+        <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script src="members-data.js"></script>
 <script>
 (async () => {
-  // ---------------------------------------------------------
-  // Admin toolbar — only appears if the "prism_admin_session" cookie
-  // is present (set by logging in on admin.html). Add/remove/status
-  // changes made here are staged in memory only, and are published
-  // for everyone (committed to GitHub via the publish-members
-  // function) when "Commit changes" is clicked. The authenticator
-  // code needed for that is generated automatically below — you're
-  // only ever asked to enter a code once, to log into admin.html in
-  // the first place.
-  // ---------------------------------------------------------
   const ADMIN_SESSION_KEY = 'prism_admin_session';
-
-  // Must match ADMIN_TOTP_SECRET in admin.html exactly — if you change
-  // one, change both.
   const ADMIN_TOTP_SECRET = 'JCAGPJB6Q3LRPSLQ';
 
   function base32Decode(base32){
@@ -456,20 +514,17 @@
     const keyBytes = base32Decode(secretBase32);
     const counter = Math.floor(atTimeMs / 1000 / period);
     const counterBytes = counterToBytes(counter);
-
     const cryptoKey = await crypto.subtle.importKey(
       'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
     );
     const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, counterBytes);
     const hmac = new Uint8Array(sigBuffer);
-
     const offset = hmac[hmac.length - 1] & 0x0f;
     const binCode =
       ((hmac[offset] & 0x7f) << 24) |
       ((hmac[offset + 1] & 0xff) << 16) |
       ((hmac[offset + 2] & 0xff) << 8) |
       (hmac[offset + 3] & 0xff);
-
     return (binCode % (10 ** digits)).toString().padStart(digits, '0');
   }
 
@@ -486,7 +541,7 @@
     return getCookie(ADMIN_SESSION_KEY) === 'true';
   }
 
-  let MEMBERS = await loadMembers(); // working copy — see isDirty below
+  let MEMBERS = await loadMembers();
   let isDirty = false;
   let pendingCount = 0;
 
@@ -499,7 +554,7 @@
     commitBtn.classList.add('dirty');
     badge.style.display = 'inline-block';
     badge.textContent = pendingCount;
-    saveDraft(MEMBERS); // persist so a reload doesn't lose staged edits
+    saveDraft(MEMBERS);
   }
 
   function clearDirty(){
@@ -521,11 +576,7 @@
 
   if(isAdmin()){
     document.getElementById('adminToolbar').classList.add('visible');
-
     if(hasDraft()){
-      // There's unpublished work staged from a previous visit — reflect
-      // that in the toolbar even though we don't know exactly how many
-      // individual edits it represents.
       isDirty = true;
       const commitBtn = document.getElementById('commitBtn');
       const badge = document.getElementById('pendingBadge');
@@ -541,7 +592,6 @@
     const label = document.getElementById('commitBtnLabel');
     commitBtn.disabled = true;
     label.textContent = 'Publishing…';
-
     try{
       const code = await generateTOTP(ADMIN_TOTP_SECRET);
       const cleanMembers = MEMBERS.map(m => {
@@ -552,7 +602,7 @@
       await publishMembers(cleanMembers, code);
       MEMBERS.forEach(m => { delete m._dirty; });
       clearDirty();
-      clearDraft(); // future loads (this page and admin.html) go back to fetching the live file
+      clearDraft();
       render();
       alert('Published! Everyone will see this update once the site finishes redeploying (usually under a minute).');
     }catch(e){
@@ -588,7 +638,6 @@
     render();
   }
 
-  // ---- Quick add modal ----
   const quickAddOverlay = document.getElementById('quickAddOverlay');
   document.getElementById('quickAddBtn').addEventListener('click', () => {
     document.getElementById('quickAddForm').reset();
@@ -617,11 +666,6 @@
     quickAddOverlay.style.display = 'none';
   });
 
-  // ---------------------------------------------------------
-  // Photo scroller (hopper model): images are drawn one at a time
-  // from a shuffled reservoir of members, drift left on their own,
-  // and are returned to the reservoir once fully off-screen.
-  // ---------------------------------------------------------
   const track = document.getElementById('marqueeTrack');
   const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
 
@@ -642,17 +686,15 @@
     a.style.position = 'absolute';
     a.style.top = '50%';
     a.style.transform = 'translateY(-50%)';
-
     const img = document.createElement('img');
     img.src = imageFor(m, memberIndex);
     img.alt = m.name;
-
     a.appendChild(img);
     return a;
   }
 
   const GAP = 32;
-  const SPEED = 55; // px per second
+  const SPEED = 55;
   let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let lastTime = null;
   let widthsByMember = [];
@@ -688,7 +730,6 @@
     const probe = document.createElement('div');
     probe.style.cssText = 'position:absolute; visibility:hidden; top:-9999px; left:-9999px; display:flex;';
     document.body.appendChild(probe);
-
     const imgs = MEMBERS.map((m, i) => {
       const img = document.createElement('img');
       img.src = imageFor(m, i);
@@ -696,7 +737,6 @@
       probe.appendChild(img);
       return img;
     });
-
     await waitForImages(imgs);
     widthsByMember = imgs.map(img => img.getBoundingClientRect().width);
     probe.remove();
@@ -738,6 +778,7 @@
       const rightmost = active.length
         ? Math.max(...active.map(item => item.x + item.w))
         : -Infinity;
+
       if(rightmost + GAP <= shellWidth){
         spawnNext(Math.max(shellWidth, rightmost + GAP));
       }
@@ -772,13 +813,9 @@
   document.getElementById('marqueeShell').addEventListener('mouseenter', () => paused = true);
   document.getElementById('marqueeShell').addEventListener('mouseleave', () => paused = false);
 
-  // ---------------------------------------------------------
-  // Search + grid render
-  // ---------------------------------------------------------
   const searchInput = document.getElementById('searchInput');
   const grid = document.getElementById('grid');
   const resultCount = document.getElementById('resultCount');
-
   searchInput.addEventListener('input', render);
 
   function cardTemplate(m, idx){
@@ -814,12 +851,8 @@
       </div>`;
 
     if(admin){
-      // Wrap the clickable content in its own link so the delete
-      // button and toggle switch (positioned on top) don't trigger
-      // navigation when clicked.
       return `<div class="${cardClasses}">${adminControls}<a href="profile.html?id=${m.id}" style="display:contents;">${inner}</a></div>`;
     }
-
     return `<a class="${cardClasses}" href="profile.html?id=${m.id}">${inner}</a>`;
   }
 
@@ -845,7 +878,7 @@
       });
       grid.querySelectorAll('[data-action="toggle"]').forEach(input => {
         input.addEventListener('click', e => {
-          e.preventDefault(); // we flip status ourselves and re-render
+          e.preventDefault();
           toggleStatus(Number(input.dataset.id));
         });
       });
@@ -854,6 +887,94 @@
 
   render();
 
+  (() => {
+    let sessionCode = null;
+
+    const overlay = document.getElementById('workerLoginOverlay');
+    const loginStep = document.getElementById('workerLoginStep');
+    const editStep = document.getElementById('workerEditStep');
+
+    document.getElementById('workerLoginLink').addEventListener('click', () => {
+      loginStep.style.display = 'block';
+      editStep.style.display = 'none';
+      document.getElementById('workerCodeInput').value = '';
+      document.getElementById('workerLoginError').textContent = '';
+      overlay.style.display = 'flex';
+    });
+
+    document.getElementById('workerLoginCancelBtn').addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+    document.getElementById('workerLoginSubmitBtn').addEventListener('click', async () => {
+      const code = document.getElementById('workerCodeInput').value.trim();
+      const errEl = document.getElementById('workerLoginError');
+      if(!code){ errEl.textContent = 'Enter your code.'; return; }
+
+      try{
+        const res = await fetch('/.netlify/functions/publish-worker-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const body = await res.json();
+
+        if(!res.ok){
+          errEl.textContent = body.error || 'Login failed.';
+          return;
+        }
+
+        sessionCode = code;
+        document.getElementById('workerEditTitle').textContent = `Edit your profile — ${body.name}`;
+        document.getElementById('workerEditStatus').value = body.current.status || 'available';
+        document.getElementById('workerEditBio').value = body.current.bio || '';
+        document.getElementById('workerEditTags').value = (body.current.tags || []).join(', ');
+        document.getElementById('workerSaveError').textContent = '';
+        document.getElementById('workerSaveSuccess').textContent = '';
+
+        loginStep.style.display = 'none';
+        editStep.style.display = 'block';
+      }catch(e){
+        errEl.textContent = `Network error: ${e.message}`;
+      }
+    });
+
+    document.getElementById('workerLogoutBtn').addEventListener('click', () => {
+      sessionCode = null;
+      overlay.style.display = 'none';
+    });
+
+    document.getElementById('workerSaveBtn').addEventListener('click', async () => {
+      const errEl = document.getElementById('workerSaveError');
+      const okEl = document.getElementById('workerSaveSuccess');
+      errEl.textContent = '';
+      okEl.textContent = '';
+
+      const updates = {
+        status: document.getElementById('workerEditStatus').value,
+        bio: document.getElementById('workerEditBio').value.trim(),
+        tags: document.getElementById('workerEditTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+      };
+
+      try{
+        const res = await fetch('/.netlify/functions/publish-worker-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: sessionCode, updates })
+        });
+        const body = await res.json();
+
+        if(!res.ok){
+          errEl.textContent = (body.error || 'Save failed.') + ' Try logging in again.';
+          return;
+        }
+
+        okEl.textContent = 'Saved. Your changes are live now.';
+      }catch(e){
+        errEl.textContent = `Network error: ${e.message}`;
+      }
+    });
+  })();
 })();
 </script>
 </body>
