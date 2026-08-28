@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Artist Profile — VirtualPlayToys</title>
+<title>VirtualPlayToys</title>
 <style>
   :root{
     --bg:#0f0f0f;
@@ -205,7 +205,7 @@
 <body>
 
 <div class="top-nav">
-  <a href="directory-template.html">&laquo; Back to the directory</a>
+  <a href="directory.html">&laquo; Back to the directory</a>
 </div>
 
 <div id="pageContent"></div>
@@ -230,7 +230,7 @@
       content.innerHTML = `
         <div class="not-found box">
           <h1>Profile not found</h1>
-          <p>This artist doesn't exist, or the link is missing an id. <a href="directory-template.html">Back to the directory &raquo;</a></p>
+          <p>This artist doesn't exist, or the link is missing an id. <a href="directory.html">Back to the directory &raquo;</a></p>
         </div>`;
     }else{
       renderProfile(member);
