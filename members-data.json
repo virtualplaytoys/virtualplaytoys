@@ -46,12 +46,34 @@
     "name": "wiriestbobcat",
     "role": "owner",
     "bio": "test",
-    "gender": "",
-    "tags": [],
-    "status": "available",
+    "gender": "he/him",
+    "tags": [
+      "escort",
+      "furry"
+    ],
+    "status": "unavailable",
     "image": "",
-    "portfolio": [],
-    "extraBio": [],
-    "bottomSections": []
+    "portfolio": [
+      {
+        "id": 1,
+        "title": "Untitled project",
+        "images": []
+      }
+    ],
+    "extraBio": [
+      {
+        "id": 1,
+        "title": "Untitled",
+        "text": ""
+      }
+    ],
+    "bottomSections": [
+      {
+        "id": 1,
+        "title": "Untitled",
+        "image": "",
+        "text": ""
+      }
+    ]
   }
 ]
