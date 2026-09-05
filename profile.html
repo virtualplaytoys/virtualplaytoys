@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VirtualPlayToys</title>
+<style>
+  :root{
+    --bg:#0f0f0f;
+    --panel:#181818;
+    --panel-2:#212121;
+    --border:#303030;
+    --text:#f1f1f1;
+    --text-dim:#aaaaaa;
+    --text-faint:#717171;
+    --accent:#3ea6ff;
+    --good:#3ea63e;
+    --bad:#e14545;
+    --font: Arial, Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    font-size:14px;
+  }
+  a{ color:var(--accent); text-decoration:none; }
+
+  .box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+
+  .top-nav{ padding:16px 4vw 0; }
+  .top-nav a{ font-size:0.82rem; color:var(--text-faint); }
+  .top-nav a:hover{ color:var(--text-dim); }
+
+  /* ---------- Title header ---------- */
+  .profile-header{
+    padding:18px 4vw 0;
+  }
+  .profile-header.box{
+    max-width:1100px;
+    margin:14px auto 0;
+    padding:22px 26px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .profile-header h1{ font-size:1.8rem; margin:0 0 6px; }
+  .profile-meta{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-size:0.8rem; color:var(--text-faint); }
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px; border-radius:999px; border:1px solid var(--border);
+  }
+  .status-pill::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--good); }
+  .status-pill.away::before{ background:var(--bad); }
+  .chip{
+    font-size:0.68rem;
+    padding:2px 9px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    background:var(--panel-2);
+  }
+
+  /* ---------- Two-column layout ---------- */
+  .profile-columns{
+    max-width:1100px;
+    margin:18px auto 0;
+    padding:0 4vw;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:18px;
+    align-items:start;
+  }
+  @media (max-width: 800px){
+    .profile-columns{ grid-template-columns:1fr; }
+  }
+
+  .col-title{
+    font-size:0.95rem;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+  }
+
+  /* ---------- Portfolio (left) ---------- */
+  .portfolio-item{
+    margin-bottom:12px;
+    overflow:visible;
+  }
+  .portfolio-item-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 14px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .portfolio-item-header h3{ font-size:0.92rem; margin:0; }
+  .portfolio-item-header .caret{
+    font-size:0.75rem;
+    color:var(--text-faint);
+    transition:transform .15s ease;
+    flex-shrink:0;
+  }
+  .portfolio-item.open .caret{ transform:rotate(90deg); }
+  .portfolio-item-body{
+    display:none;
+    padding:0 14px 14px;
+  }
+  .portfolio-item.open .portfolio-item-body{ display:block; }
+  .portfolio-images{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:8px;
+  }
+  .portfolio-images img{
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    border-radius:6px;
+    border:1px solid var(--border);
+    display:block;
+    cursor:zoom-in;
+    transition:transform .2s ease, box-shadow .2s ease;
+    position:relative;
+  }
+  .portfolio-images img:hover{
+    transform:scale(3);
+    z-index:20;
+    box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  }
+  .empty-note{ color:var(--text-faint); font-size:0.85rem; padding:14px; }
+
+  /* ---------- Bio (right) ---------- */
+  .bio-text{ font-size:0.92rem; line-height:1.65; color:var(--text-dim); margin:0 0 18px; }
+  .bio-block{
+    margin-bottom:12px;
+    padding:14px 16px;
+  }
+  .bio-block h3{ font-size:0.85rem; margin:0 0 6px; }
+  .bio-block p{ font-size:0.85rem; line-height:1.55; color:var(--text-dim); margin:0; }
+
+  /* ---------- Bottom sections ---------- */
+  .bottom-sections{
+    max-width:1100px;
+    margin:24px auto 60px;
+    padding:0 4vw;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .bottom-item{ overflow:visible; }
+  .bottom-item-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 16px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .bottom-item-header h3{ font-size:0.9rem; margin:0; }
+  .bottom-item-header .caret{ font-size:0.75rem; color:var(--text-faint); transition:transform .15s ease; }
+  .bottom-item.open .caret{ transform:rotate(90deg); }
+  .bottom-item-body{ display:none; padding:0 16px 16px; }
+  .bottom-item.open .bottom-item-body{ display:block; }
+  .bottom-item-body img{
+    max-width:220px;
+    width:100%;
+    border-radius:6px;
+    border:1px solid var(--border);
+    display:block;
+    margin-bottom:10px;
+    cursor:zoom-in;
+    transition:transform .2s ease, box-shadow .2s ease;
+    position:relative;
+  }
+  .bottom-item-body img:hover{
+    transform:scale(3);
+    z-index:20;
+    box-shadow:0 12px 30px rgba(0,0,0,0.6);
+  }
+  .bottom-item-body p{ font-size:0.85rem; line-height:1.55; color:var(--text-dim); margin:0; }
+
+  .not-found{
+    max-width:600px;
+    margin:60px auto;
+    padding:30px;
+    text-align:center;
+  }
+  .not-found p{ color:var(--text-dim); }
+
+  /* ---------- Worker self-edit button + modal ---------- */
+  .edit-own-profile-btn{
+    font-family:var(--font);
+    font-size:0.82rem;
+    padding:7px 14px;
+    border-radius:16px;
+    border:1px solid var(--accent);
+    background:transparent;
+    color:var(--accent);
+    cursor:pointer;
+  }
+  .edit-own-profile-btn:hover{ background:var(--accent); color:#04121f; }
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:100;
+    align-items:flex-start;
+    justify-content:center;
+    padding:6vh 16px;
+    overflow-y:auto;
+  }
+  .field{ margin-bottom:12px; text-align:left; }
+  .field label{ display:block; font-size:0.78rem; color:var(--text-dim); margin-bottom:5px; }
+  .field input[type="text"], .field select, .field textarea{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:9px 10px;
+    color:var(--text);
+    font-family:var(--font);
+    font-size:0.9rem;
+  }
+  .field textarea{ min-height:80px; resize:vertical; }
+  .field-error{ font-size:0.78rem; color:var(--bad); margin-bottom:10px; min-height:1em; }
+  .field-success{ font-size:0.78rem; color:var(--good); margin-bottom:10px; min-height:1em; }
+  .btn{
+    font-size:0.8rem;
+    padding:7px 14px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text);
+    cursor:pointer;
+    font-family:var(--font);
+  }
+  .btn:hover{ background:var(--border); }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#04121f; font-weight:bold; }
+  .btn.primary:hover{ filter:brightness(1.08); }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <a href="directory.html">&laquo; Back to the directory</a>
+</div>
+
+<div id="pageContent"></div>
+
+<!-- Worker self-edit modal — only ever opened if the button above is
+     shown, which only happens when this browser's session matches
+     THIS profile's id. -->
+<div class="modal-overlay" id="workerEditOverlay">
+  <div class="box" style="max-width:420px; width:100%; padding:22px 22px 24px;">
+    <h2 style="font-size:1.1rem; margin:0 0 4px;">Edit your profile</h2>
+    <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 16px;">
+      Changes save immediately.
+    </p>
+
+    <div class="field">
+      <label for="workerEditImage">Profile photo</label>
+      <input type="file" id="workerEditImage" accept="image/*" />
+      <img id="workerEditImagePreview" style="display:none; margin-top:8px; max-width:100%; max-height:160px; border-radius:6px; border:1px solid var(--border);" />
+    </div>
+
+    <div class="field">
+      <label for="workerEditRole">Role / title</label>
+      <input type="text" id="workerEditRole" />
+    </div>
+
+    <div class="field">
+      <label for="workerEditStatus">Availability</label>
+      <select id="workerEditStatus">
+        <option value="available">Available</option>
+        <option value="unavailable">Not available</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="workerEditBio">Bio</label>
+      <textarea id="workerEditBio"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="workerEditTags">Tags (comma-separated)</label>
+      <input type="text" id="workerEditTags" />
+    </div>
+
+    <div class="field-error" id="workerSaveError"></div>
+    <div class="field-success" id="workerSaveSuccess"></div>
+
+    <div style="display:flex; justify-content:space-between; gap:8px;">
+      <button type="button" class="btn" id="workerLogoutBtn">Log out</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn" id="workerCancelEditBtn">Nevermind</button>
+        <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="members-data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id'));
+  const content = document.getElementById('pageContent');
+
+  const placeholderColors = ['a970ff','ff4fd8','4fe8ff','ffd24f','7a5cff','ff9f4f'];
+  function placeholderImg(seed, label){
+    const color = placeholderColors[seed % placeholderColors.length];
+    return `https://placehold.co/500x375/${color}/0a0512?text=${encodeURIComponent(label)}`;
+  }
+
+  (async () => {
+    const MEMBERS = await loadMembers();
+    const member = MEMBERS.find(m => m.id === id);
+
+    if(!member){
+      content.innerHTML = `
+        <div class="not-found box">
+          <h1>Profile not found</h1>
+          <p>This artist doesn't exist, or the link is missing an id. <a href="directory.html">Back to the directory &raquo;</a></p>
+        </div>`;
+    }else{
+      renderProfile(member);
+    }
+  })();
+
+  function renderPortfolio(portfolio){
+    if(!portfolio || portfolio.length === 0){
+      return `<div class="empty-note box">No portfolio pieces added yet.</div>`;
+    }
+
+    // 2 or fewer: show fully open. 3+: collapsed dropdowns (first one open).
+    const forceOpen = portfolio.length <= 2;
+
+    return portfolio.map((p, i) => {
+      const openClass = (forceOpen || i === 0) ? ' open' : '';
+      const images = (p.images && p.images.length)
+        ? p.images.map((src, idx) => `<img src="${src}" alt="${p.title} image ${idx + 1}" loading="lazy" />`).join('')
+        : `<img src="${placeholderImg(i, p.title)}" alt="${p.title} placeholder" loading="lazy" />`;
+
+      return `
+        <div class="portfolio-item box${openClass}" data-portfolio-item>
+          <div class="portfolio-item-header" data-toggle>
+            <h3>${p.title}</h3>
+            <span class="caret">&#9656;</span>
+          </div>
+          <div class="portfolio-item-body">
+            <div class="portfolio-images">${images}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderExtraBio(extraBio){
+    if(!extraBio || extraBio.length === 0) return '';
+    return extraBio.map(b => `
+      <div class="bio-block box">
+        <h3>${b.title}</h3>
+        <p>${b.text}</p>
+      </div>`).join('');
+  }
+
+  function renderBottomSections(sections){
+    if(!sections || sections.length === 0) return '';
+    return sections.map((s, i) => `
+      <div class="bottom-item box" data-bottom-item>
+        <div class="bottom-item-header" data-toggle>
+          <h3>${s.title}</h3>
+          <span class="caret">&#9656;</span>
+        </div>
+        <div class="bottom-item-body">
+          ${s.image ? `<img src="${s.image}" alt="${s.title}" />` : ''}
+          ${s.text ? `<p>${s.text}</p>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  function renderProfile(m){
+    document.title = `${m.name} — VirtualPlayToys`;
+
+    content.innerHTML = `
+      <div class="profile-header box">
+        <div>
+          <h1>${m.name}</h1>
+          <div class="profile-meta">
+            <span>${m.role}</span>
+            ${m.gender ? `<span>&middot; ${m.gender}</span>` : ''}
+            <span class="status-pill ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="card-tags">
+            ${(m.tags || []).map(t => `<span class="chip">${t}</span>`).join('')}
+          </div>
+          <button class="edit-own-profile-btn" id="editOwnProfileBtn" style="display:none;">Edit my profile</button>
+        </div>
+      </div>
+
+      <div class="profile-columns">
+        <div>
+          <p class="col-title">Portfolio</p>
+          ${renderPortfolio(m.portfolio)}
+        </div>
+        <div>
+          <p class="col-title">About</p>
+          <p class="bio-text">${m.bio}</p>
+          ${renderExtraBio(m.extraBio)}
+        </div>
+      </div>
+
+      <div class="bottom-sections">
+        ${renderBottomSections(m.bottomSections)}
+      </div>
+    `;
+
+    content.querySelectorAll('[data-toggle]').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('[data-portfolio-item], [data-bottom-item]').classList.toggle('open');
+      });
+    });
+
+    checkOwnProfileSession(m);
+  }
+
+  // =====================================================================
+  // Worker self-edit — the button only appears after silently checking
+  // that this browser's stored session token (set by logging in on
+  // directory.html) belongs to THIS specific profile. A session for a
+  // different worker never shows the button here.
+  // =====================================================================
+  const SESSION_STORAGE_KEY = 'prism_worker_session';
+  let sessionToken = null;
+  let currentMember = null;
+
+  function loadStoredSession(){
+    try{ return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null'); }
+    catch(e){ return null; }
+  }
+  function clearStoredSession(){
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+
+  async function checkOwnProfileSession(member){
+    currentMember = member;
+    const stored = loadStoredSession();
+    if(!stored || !stored.token) return;
+
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: stored.token })
+      });
+      const body = await res.json();
+      if(!res.ok){
+        clearStoredSession(); // stale/expired token — clean it up quietly
+        return;
+      }
+
+      // Only show the button if this session belongs to THIS profile.
+      if(body.memberId === member.id){
+        sessionToken = stored.token;
+        document.getElementById('editOwnProfileBtn').style.display = 'inline-block';
+        populateEditForm(body);
+      }
+    }catch(e){
+      // Network hiccup — fail quietly, button just stays hidden.
+    }
+  }
+
+  function populateEditForm(body){
+    document.getElementById('workerEditRole').value = body.current.role || '';
+    document.getElementById('workerEditStatus').value = body.current.status || 'available';
+    document.getElementById('workerEditBio').value = body.current.bio || '';
+    document.getElementById('workerEditTags').value = (body.current.tags || []).join(', ');
+    const preview = document.getElementById('workerEditImagePreview');
+    if(body.current.image){
+      preview.src = body.current.image;
+      preview.style.display = 'block';
+    }else{
+      preview.style.display = 'none';
+    }
+  }
+
+  document.body.addEventListener('click', e => {
+    if(e.target && e.target.id === 'editOwnProfileBtn'){
+      document.getElementById('workerSaveError').textContent = '';
+      document.getElementById('workerSaveSuccess').textContent = '';
+      document.getElementById('workerEditOverlay').style.display = 'flex';
+    }
+  });
+
+  document.getElementById('workerCancelEditBtn').addEventListener('click', () => {
+    document.getElementById('workerEditOverlay').style.display = 'none';
+  });
+
+  document.getElementById('workerLogoutBtn').addEventListener('click', () => {
+    clearStoredSession();
+    sessionToken = null;
+    document.getElementById('workerEditOverlay').style.display = 'none';
+    const btn = document.getElementById('editOwnProfileBtn');
+    if(btn) btn.style.display = 'none';
+  });
+
+  let pendingImageDataUrl = null;
+  document.getElementById('workerEditImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 800;
+      let { width, height } = img;
+      if(width > height && width > maxDim){ height *= maxDim / width; width = maxDim; }
+      else if(height > maxDim){ width *= maxDim / height; height = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      pendingImageDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const preview = document.getElementById('workerEditImagePreview');
+      preview.src = pendingImageDataUrl;
+      preview.style.display = 'block';
+    };
+    img.src = URL.createObjectURL(file);
+  });
+
+  document.getElementById('workerSaveBtn').addEventListener('click', async () => {
+    const errEl = document.getElementById('workerSaveError');
+    const okEl = document.getElementById('workerSaveSuccess');
+    errEl.textContent = '';
+    okEl.textContent = '';
+
+    const updates = {
+      role: document.getElementById('workerEditRole').value.trim(),
+      status: document.getElementById('workerEditStatus').value,
+      bio: document.getElementById('workerEditBio').value.trim(),
+      tags: document.getElementById('workerEditTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+    };
+    if(pendingImageDataUrl) updates.image = pendingImageDataUrl;
+
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: sessionToken, updates })
+      });
+      const body = await res.json();
+
+      if(!res.ok){
+        const expired = body.error && body.error.includes('expired');
+        errEl.textContent = (body.error || 'Save failed.') + (expired ? ' Please log in again from the directory page.' : '');
+        if(expired){
+          clearStoredSession();
+          sessionToken = null;
+        }
+        return;
+      }
+
+      pendingImageDataUrl = null;
+      okEl.textContent = 'Saved. Refresh this page to see your changes reflected.';
+    }catch(e){
+      errEl.textContent = `Network error: ${e.message}`;
+    }
+  });
+</script>
+</body>
+</html>
