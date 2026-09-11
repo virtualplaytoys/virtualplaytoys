@@ -262,55 +262,80 @@
 
 <div id="pageContent"></div>
 
-<!-- Worker self-edit modal — only ever opened if the button above is
-     shown, which only happens when this browser's session matches
-     THIS profile's id. -->
+<!-- Worker login + self-edit modal. Unlike before, this page now has
+     its own login step — a worker doesn't have to have logged in on
+     directory.html first. -->
 <div class="modal-overlay" id="workerEditOverlay">
   <div class="box" style="max-width:420px; width:100%; padding:22px 22px 24px;">
-    <h2 style="font-size:1.1rem; margin:0 0 4px;">Edit your profile</h2>
-    <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 16px;">
-      Changes save immediately.
-    </p>
 
-    <div class="field">
-      <label for="workerEditImage">Profile photo</label>
-      <input type="file" id="workerEditImage" accept="image/*" />
-      <img id="workerEditImagePreview" style="display:none; margin-top:8px; max-width:100%; max-height:160px; border-radius:6px; border:1px solid var(--border);" />
-    </div>
-
-    <div class="field">
-      <label for="workerEditRole">Role / title</label>
-      <input type="text" id="workerEditRole" />
-    </div>
-
-    <div class="field">
-      <label for="workerEditStatus">Availability</label>
-      <select id="workerEditStatus">
-        <option value="available">Available</option>
-        <option value="unavailable">Not available</option>
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="workerEditBio">Bio</label>
-      <textarea id="workerEditBio"></textarea>
-    </div>
-
-    <div class="field">
-      <label for="workerEditTags">Tags (comma-separated)</label>
-      <input type="text" id="workerEditTags" />
-    </div>
-
-    <div class="field-error" id="workerSaveError"></div>
-    <div class="field-success" id="workerSaveSuccess"></div>
-
-    <div style="display:flex; justify-content:space-between; gap:8px;">
-      <button type="button" class="btn" id="workerLogoutBtn">Log out</button>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn" id="workerCancelEditBtn">Nevermind</button>
-        <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+    <div id="workerLoginStep">
+      <h2 style="font-size:1.1rem; margin:0 0 14px;">Worker login</h2>
+      <p style="font-size:0.82rem; color:var(--text-dim); margin:0 0 14px;">
+        Enter your name and the 6-digit code from your authenticator app.
+      </p>
+      <div class="field">
+        <label for="workerNameInput">Your name</label>
+        <input type="text" id="workerNameInput" autocomplete="username" placeholder="As listed on your profile" />
+      </div>
+      <div class="field">
+        <label for="workerCodeInput">Code</label>
+        <input type="text" id="workerCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               autocomplete="one-time-code" placeholder="123456" />
+      </div>
+      <div class="field-error" id="workerLoginError"></div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn" id="workerLoginCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="workerLoginSubmitBtn">Log in</button>
       </div>
     </div>
+
+    <div id="workerEditFormStep" style="display:none;">
+      <h2 style="font-size:1.1rem; margin:0 0 4px;">Edit your profile</h2>
+      <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 16px;">
+        Changes save immediately.
+      </p>
+
+      <div class="field">
+        <label for="workerEditImage">Profile photo</label>
+        <input type="file" id="workerEditImage" accept="image/*" />
+        <img id="workerEditImagePreview" style="display:none; margin-top:8px; max-width:100%; max-height:160px; border-radius:6px; border:1px solid var(--border);" />
+      </div>
+
+      <div class="field">
+        <label for="workerEditRole">Role / title</label>
+        <input type="text" id="workerEditRole" />
+      </div>
+
+      <div class="field">
+        <label for="workerEditStatus">Availability</label>
+        <select id="workerEditStatus">
+          <option value="available">Available</option>
+          <option value="unavailable">Not available</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="workerEditBio">Bio</label>
+        <textarea id="workerEditBio"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="workerEditTags">Tags (comma-separated)</label>
+        <input type="text" id="workerEditTags" />
+      </div>
+
+      <div class="field-error" id="workerSaveError"></div>
+      <div class="field-success" id="workerSaveSuccess"></div>
+
+      <div style="display:flex; justify-content:space-between; gap:8px;">
+        <button type="button" class="btn" id="workerLogoutBtn">Log out</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" id="workerCancelEditBtn">Nevermind</button>
+          <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -409,7 +434,7 @@
           <div class="card-tags">
             ${(m.tags || []).map(t => `<span class="chip">${t}</span>`).join('')}
           </div>
-          <button class="edit-own-profile-btn" id="editOwnProfileBtn" style="display:none;">Edit my profile</button>
+          <button class="edit-own-profile-btn" id="editOwnProfileBtn">Edit my profile</button>
         </div>
       </div>
 
@@ -436,14 +461,17 @@
       });
     });
 
-    checkOwnProfileSession(m);
+    currentMember = m;
+    checkStoredSession();
   }
 
   // =====================================================================
-  // Worker self-edit — the button only appears after silently checking
-  // that this browser's stored session token (set by logging in on
-  // directory.html) belongs to THIS specific profile. A session for a
-  // different worker never shows the button here.
+  // Worker login + self-edit. The "Edit my profile" button is always
+  // visible (anyone can click it), but it only ever leads to an actual
+  // edit form if the login step succeeds AND the code entered belongs
+  // to THIS specific profile. A worker logging in on someone else's
+  // page gets told plainly that this isn't their profile — they never
+  // see or touch that other worker's data.
   // =====================================================================
   const SESSION_STORAGE_KEY = 'prism_worker_session';
   let sessionToken = null;
@@ -453,35 +481,44 @@
     try{ return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null'); }
     catch(e){ return null; }
   }
+  function storeSession(tok){
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: tok }));
+  }
   function clearStoredSession(){
     localStorage.removeItem(SESSION_STORAGE_KEY);
   }
 
-  async function checkOwnProfileSession(member){
-    currentMember = member;
+  // On page load, silently check whether there's already a valid
+  // session for THIS profile (e.g. they logged in earlier, here or on
+  // directory.html). If so, the edit form is ready to go the moment
+  // they click the button — no re-login needed.
+  async function checkStoredSession(){
     const stored = loadStoredSession();
     if(!stored || !stored.token) return;
 
+    const result = await verifyToken(stored.token);
+    if(result.ok && result.body.memberId === currentMember.id){
+      sessionToken = stored.token;
+    }else if(!result.ok){
+      clearStoredSession(); // stale/expired token — clean it up quietly
+    }
+    // If it's valid but for a DIFFERENT member, we deliberately leave
+    // sessionToken unset and don't touch localStorage — that's a
+    // legitimate session for another profile, not something to erase
+    // just because we happened to load on the wrong page.
+  }
+
+  async function verifyToken(token){
     try{
       const res = await fetch('/.netlify/functions/publish-worker-edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: stored.token })
+        body: JSON.stringify({ token })
       });
       const body = await res.json();
-      if(!res.ok){
-        clearStoredSession(); // stale/expired token — clean it up quietly
-        return;
-      }
-
-      // Only show the button if this session belongs to THIS profile.
-      if(body.memberId === member.id){
-        sessionToken = stored.token;
-        document.getElementById('editOwnProfileBtn').style.display = 'inline-block';
-        populateEditForm(body);
-      }
+      return { ok: res.ok, body };
     }catch(e){
-      // Network hiccup — fail quietly, button just stays hidden.
+      return { ok: false, body: { error: e.message } };
     }
   }
 
@@ -499,11 +536,69 @@
     }
   }
 
-  document.body.addEventListener('click', e => {
-    if(e.target && e.target.id === 'editOwnProfileBtn'){
-      document.getElementById('workerSaveError').textContent = '';
-      document.getElementById('workerSaveSuccess').textContent = '';
-      document.getElementById('workerEditOverlay').style.display = 'flex';
+  function showLoginStep(){
+    document.getElementById('workerLoginStep').style.display = 'block';
+    document.getElementById('workerEditFormStep').style.display = 'none';
+    document.getElementById('workerNameInput').value = '';
+    document.getElementById('workerCodeInput').value = '';
+    document.getElementById('workerLoginError').textContent = '';
+  }
+
+  function showEditStep(body){
+    document.getElementById('workerLoginStep').style.display = 'none';
+    document.getElementById('workerEditFormStep').style.display = 'block';
+    document.getElementById('workerSaveError').textContent = '';
+    document.getElementById('workerSaveSuccess').textContent = '';
+    populateEditForm(body);
+  }
+
+  document.getElementById('editOwnProfileBtn').addEventListener('click', async () => {
+    document.getElementById('workerEditOverlay').style.display = 'flex';
+
+    if(sessionToken){
+      // Already confirmed valid for this exact profile on page load.
+      const result = await verifyToken(sessionToken);
+      if(result.ok){ showEditStep(result.body); return; }
+      sessionToken = null;
+      clearStoredSession();
+    }
+    showLoginStep();
+  });
+
+  document.getElementById('workerLoginCancelBtn').addEventListener('click', () => {
+    document.getElementById('workerEditOverlay').style.display = 'none';
+  });
+
+  document.getElementById('workerLoginSubmitBtn').addEventListener('click', async () => {
+    const name = document.getElementById('workerNameInput').value.trim();
+    const code = document.getElementById('workerCodeInput').value.trim();
+    const errEl = document.getElementById('workerLoginError');
+    if(!name || !code){ errEl.textContent = 'Enter your name and your code.'; return; }
+
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, code })
+      });
+      const body = await res.json();
+
+      if(!res.ok){ errEl.textContent = body.error || 'Login failed.'; return; }
+
+      if(body.memberId !== currentMember.id){
+        // Real login, just not for this page. Deliberately don't store
+        // this token here — leave whatever session already existed
+        // (if any) untouched, so switching back to their own profile
+        // still works.
+        errEl.textContent = `That login belongs to ${body.name}, not ${currentMember.name}. You can only edit your own profile.`;
+        return;
+      }
+
+      sessionToken = body.token;
+      storeSession(body.token);
+      showEditStep(body);
+    }catch(e){
+      errEl.textContent = `Network error: ${e.message}`;
     }
   });
 
@@ -515,8 +610,6 @@
     clearStoredSession();
     sessionToken = null;
     document.getElementById('workerEditOverlay').style.display = 'none';
-    const btn = document.getElementById('editOwnProfileBtn');
-    if(btn) btn.style.display = 'none';
   });
 
   let pendingImageDataUrl = null;
@@ -564,10 +657,11 @@
 
       if(!res.ok){
         const expired = body.error && body.error.includes('expired');
-        errEl.textContent = (body.error || 'Save failed.') + (expired ? ' Please log in again from the directory page.' : '');
+        errEl.textContent = (body.error || 'Save failed.') + (expired ? ' Please log in again.' : '');
         if(expired){
           clearStoredSession();
           sessionToken = null;
+          showLoginStep();
         }
         return;
       }
