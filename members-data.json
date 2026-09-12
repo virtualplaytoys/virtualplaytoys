@@ -103,6 +103,19 @@
     "schedule": "weekdays 10am - 6pm pst",
     "contacts": [],
     "links": [],
-    "updatedAt": "2026-09-12T22:28:58.001Z"
+    "updatedAt": "2026-09-12T22:29:06.351Z",
+    "availability": {
+      "timezone": "America/Los_Angeles",
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri"
+      ],
+      "start": "09:00",
+      "end": "21:00",
+      "note": ""
+    }
   }
 ]
