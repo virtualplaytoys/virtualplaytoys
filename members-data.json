@@ -45,7 +45,7 @@
     "id": 11,
     "name": "wiriestbobcat",
     "role": "owner",
-    "bio": "test",
+    "bio": "this is a test profile as well as a frame of refrence for new workers",
     "gender": "he/him",
     "tags": [
       "escort",
@@ -80,6 +80,11 @@
         "id": 1,
         "label": "30min",
         "amount": "100usd"
+      },
+      {
+        "id": 2,
+        "label": "1hr",
+        "amount": "130usd"
       }
     ],
     "services": {
@@ -95,6 +100,6 @@
     "schedule": "weekdays 10am - 6pm pst",
     "contacts": [],
     "links": [],
-    "updatedAt": "2026-09-12T19:53:07.029Z"
+    "updatedAt": "2026-09-12T19:54:30.423Z"
   }
 ]
