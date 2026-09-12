@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>~*~ VirtualPlayToys ~*~ Avatar Directory ~*~</title>
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+  /* ---------- Admin toolbar (staging / commit) ---------- */
+  .admin-toolbar{
+    display:none;
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--accent);
+    padding:10px 4vw;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .admin-toolbar.visible{ display:flex; }
+  .admin-toolbar .label{
+    font-size:0.8rem;
+    color:var(--accent);
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .admin-toolbar .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .btn.commit{ position:relative; }
+  .btn.commit.dirty{ background:var(--good); border-color:var(--good); color:#052905; font-weight:700; }
+  .pending-badge{
+    font-size:0.68rem;
+    background:var(--bad);
+    color:#fff;
+    border-radius:999px;
+    padding:1px 7px;
+    margin-left:6px;
+  }
+  .card.dirty{ outline:2px solid var(--accent); outline-offset:-1px; }
+  .card-admin-controls{
+    position:absolute;
+    top:10px; left:10px;
+    z-index:3;
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+
+  /* ---------- How it works ---------- */
+  .how-strip{
+    max-width:1060px;
+    margin:20px auto 0;
+    width:calc(100% - 8vw);
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:14px;
+  }
+  .how-card{ padding:16px 18px; }
+  .how-card .how-icon{ font-size:1.3rem; margin-bottom:6px; }
+  .how-card h3{ font-size:0.92rem; margin:0 0 5px; color:var(--text); }
+  .how-card p{ font-size:0.82rem; color:var(--text-dim); margin:0; }
+  .safety-note{
+    max-width:1060px;
+    margin:14px auto 0;
+    width:calc(100% - 8vw);
+    padding:12px 18px;
+    font-size:0.8rem;
+    color:var(--text-dim);
+    background:rgba(242,193,78,0.07);
+    border:1px solid rgba(242,193,78,0.28);
+    border-radius:var(--radius-sm);
+  }
+  .safety-note strong{ color:var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="admin-toolbar" id="adminToolbar">
+  <span class="label">⚙ Admin — changes below are staged until you publish</span>
+  <div class="actions">
+    <button class="btn primary" id="quickAddBtn">+ Add person</button>
+    <button class="btn commit" id="commitBtn" disabled><span id="commitBtnLabel">Commit changes</span><span class="pending-badge" id="pendingBadge" style="display:none;">0</span></button>
+    <a class="btn" href="admin.html">Full editor</a>
+    <button class="btn ghost" id="toolbarLogoutBtn">Log out</button>
+  </div>
+</div>
+
+<div class="site-header">
+  <header class="box">
+    <h1>✦ VirtualPlayToys ✦</h1>
+    <p class="lede">A directory of virtual playtoys that you can request escort/private dance/porn services — performers advertise here, and you deal with them directly~</p>
+    <p class="lede">-escort: somone you bring along to chat or do things with, you buy the time~ booked and paid directly with the performer, in their local currency</p>
+    <p class="lede">-private dance: skilled dancers that if requested will bring you to a world and show their skill in full view for you~ arranged directly with the dancer</p>
+    <p class="lede">-porn services: we advertise those who make sexual content and you pay them directly to be in the said content~ the site takes no cut</p>
+  </header>
+</div>
+
+<div class="how-strip">
+  <div class="box how-card">
+    <div class="how-icon">🔎</div>
+    <h3>1. Browse &amp; pick</h3>
+    <p>Filter by availability or tag, open a profile, and check their portfolio, rates, and schedule.</p>
+  </div>
+  <div class="box how-card">
+    <div class="how-icon">🛡️</div>
+    <h3>2. Book anywhere, 18+</h3>
+    <p>Booking happens on whatever message platform you both prefer — Discord, WhatsApp, Telegram, or right in VR. The platform you use sets its own age rules, and performers may still ask to see ID.</p>
+  </div>
+  <div class="box how-card">
+    <div class="how-icon">💬</div>
+    <h3>3. Contact &amp; agree</h3>
+    <p>Reach out via the contact on the profile, agree on the session and price, and pay the performer directly using their preferred payment method.</p>
+  </div>
+</div>
+
+<div class="marquee-shell box" id="marqueeShell">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<p class="safety-note">
+  <strong>How this works:</strong> VirtualPlayToys is an advertising directory — performers pay for their listings,
+  and the site takes no cut of any session. All payments go directly from you to the performer, using the payment
+  method listed on their profile, in the performer's local currency. Every performer listed here is manually verified
+  by our team (photo ID + live selfie match). Report anything suspicious via a performer's
+  page — performers can end any session and report clients at their own discretion, and may
+  also ask to see ID themselves if they don't trust an 18+ badge alone (rumors of kids beating
+  age verification keep growing, so that judgment call is theirs to make).
+</p>
+
+<div class="controls box">
+  <div class="search">
+    <span>🔍</span>
+    <input type="text" id="searchInput" placeholder="Search by name or tag..." />
+  </div>
+  <select class="filter-select" id="availabilityFilter" aria-label="Filter by availability">
+    <option value="all">All availability</option>
+    <option value="available">Available now</option>
+    <option value="unavailable">Unavailable</option>
+  </select>
+  <select class="filter-select" id="tagFilter" aria-label="Filter by tag">
+    <option value="">All tags</option>
+  </select>
+</div>
+
+<div class="result-count" id="resultCount"></div>
+
+<main class="grid" id="grid"></main>
+
+<footer class="site-footer">
+  <div class="footer-links">
+    <button class="footer-link-btn" id="workerLoginLink">Worker Login</button>
+    <a class="footer-link-btn" href="admin.html">Admin Login</a>
+  </div>
+  <p>© VirtualPlayToys · 18+ only · VISITORS: 004,281</p>
+</footer>
+
+<!-- ---------------- Quick add (admin) ---------------- -->
+<div class="modal-overlay" id="quickAddOverlay">
+  <div class="box modal-box">
+    <h2>Quick add person</h2>
+    <form id="quickAddForm">
+      <div class="field">
+        <label for="quickName">Name</label>
+        <input type="text" id="quickName" required />
+      </div>
+      <div class="field">
+        <label for="quickRole">Role / title</label>
+        <input type="text" id="quickRole" placeholder="e.g. Escort — VR clubs" required />
+      </div>
+      <div class="field">
+        <label for="quickBio">Short bio</label>
+        <textarea id="quickBio" required></textarea>
+      </div>
+      <p class="field-hint" style="margin:0 0 14px;">
+        Added as "Available" with a placeholder picture. Add tags, gender,
+        pictures, and rates from the full editor after committing.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="quickAddCancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Add to staged changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ---------------- Worker login / self-edit ---------------- -->
+<div class="modal-overlay" id="workerLoginOverlay">
+  <div class="box modal-box">
+
+    <div id="workerLoginStep">
+      <h2>Worker login</h2>
+      <p style="font-size:0.85rem; color:var(--text-dim); margin:0 0 14px;">
+        Enter the 6-digit code from your authenticator app. Your login is
+        remembered on this device.
+      </p>
+      <div class="field">
+        <input type="text" id="workerCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               autocomplete="one-time-code" placeholder="123456" />
+      </div>
+      <div class="field-error" id="workerLoginError"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="workerLoginCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="workerLoginSubmitBtn">Log in</button>
+      </div>
+    </div>
+
+    <div id="workerEditStep" style="display:none;">
+      <h2 style="margin-bottom:4px;" id="workerEditTitle">Edit your profile</h2>
+      <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 14px;">
+        Quick controls here — for portfolio, rates, and pictures use
+        "Edit my profile" on your own profile page.
+      </p>
+
+      <div class="field">
+        <label for="workerEditStatus">Availability</label>
+        <select id="workerEditStatus">
+          <option value="available">Available</option>
+          <option value="unavailable">Not available</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="workerEditBio">Bio</label>
+        <textarea id="workerEditBio"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="workerEditTags">Tags (comma-separated)</label>
+        <input type="text" id="workerEditTags" />
+      </div>
+
+      <div class="field-error" id="workerSaveError"></div>
+      <div class="field-success" id="workerSaveSuccess"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="workerCancelEditBtn">Cancel</button>
+        <button type="button" class="btn danger" id="workerLogoutBtn">Log out</button>
+        <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="members-data.js"></script>
+<script src="assets/ui.js"></script>
+<script>
+(async () => {
+  const ADMIN_SESSION_KEY = 'prism_admin_session';
+  const ADMIN_TOTP_SECRET = 'JCAGPJB6Q3LRPSLQ';
+
+  // ---------------- TOTP (client-side check for the admin gate) ----------------
+  function base32Decode(base32){
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for(const char of base32.replace(/=+$/, '').toUpperCase()){
+      const val = alphabet.indexOf(char);
+      if(val === -1) continue;
+      bits += val.toString(2).padStart(5, '0');
+    }
+    const bytes = [];
+    for(let i = 0; i + 8 <= bits.length; i += 8){
+      bytes.push(parseInt(bits.substr(i, 8), 2));
+    }
+    return new Uint8Array(bytes);
+  }
+
+  function counterToBytes(counter){
+    const bytes = new Uint8Array(8);
+    for(let i = 7; i >= 0; i--){
+      bytes[i] = counter & 0xff;
+      counter = Math.floor(counter / 256);
+    }
+    return bytes;
+  }
+
+  async function generateTOTP(secretBase32, atTimeMs = Date.now(), period = 30, digits = 6){
+    const keyBytes = base32Decode(secretBase32);
+    const counter = Math.floor(atTimeMs / 1000 / period);
+    const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, counterToBytes(counter));
+    const hmac = new Uint8Array(sigBuffer);
+    const offset = hmac[hmac.length - 1] & 0x0f;
+    const binCode =
+      ((hmac[offset] & 0x7f) << 24) |
+      ((hmac[offset + 1] & 0xff) << 16) |
+      ((hmac[offset + 2] & 0xff) << 8) |
+      (hmac[offset + 3] & 0xff);
+    return (binCode % (10 ** digits)).toString().padStart(digits, '0');
+  }
+
+  function getCookie(name){
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+    return match ? match[1] : null;
+  }
+  function eraseCookie(name){
+    document.cookie = `${name}=; max-age=0; path=/; samesite=Lax`;
+  }
+  function isAdmin(){
+    return getCookie(ADMIN_SESSION_KEY) === 'true';
+  }
+
+  // ---------------- Admin staging / publishing ----------------
+  let MEMBERS = await loadMembers();
+  let isDirty = false;
+  let pendingCount = 0;
+
+  const commitBtn = document.getElementById('commitBtn');
+  const commitBtnLabel = document.getElementById('commitBtnLabel');
+  const pendingBadge = document.getElementById('pendingBadge');
+
+  function markDirty(){
+    isDirty = true;
+    pendingCount++;
+    commitBtn.disabled = false;
+    commitBtn.classList.add('dirty');
+    pendingBadge.style.display = 'inline-block';
+    pendingBadge.textContent = pendingCount;
+    saveDraft(MEMBERS);
+  }
+
+  function clearDirty(){
+    isDirty = false;
+    pendingCount = 0;
+    commitBtn.disabled = true;
+    commitBtn.classList.remove('dirty');
+    pendingBadge.style.display = 'none';
+  }
+
+  window.addEventListener('beforeunload', e => {
+    if(isDirty){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
+  if(isAdmin()){
+    document.getElementById('adminToolbar').classList.add('visible');
+    if(hasDraft()){
+      isDirty = true;
+      commitBtn.disabled = false;
+      commitBtn.classList.add('dirty');
+      pendingBadge.style.display = 'inline-block';
+      pendingBadge.textContent = '•';
+    }
+  }
+
+  commitBtn.addEventListener('click', async () => {
+    commitBtn.disabled = true;
+    commitBtnLabel.textContent = 'Publishing…';
+    try{
+      const code = await generateTOTP(ADMIN_TOTP_SECRET);
+      const cleanMembers = MEMBERS.map(m => {
+        const copy = { ...m };
+        delete copy._dirty;
+        return copy;
+      });
+      await publishMembers(cleanMembers, code);
+      MEMBERS.forEach(m => { delete m._dirty; });
+      clearDirty();
+      clearDraft();
+      render();
+      rebuildMarquee();
+      showToast('Published! Everyone will see this update once the site redeploys (usually under a minute).', 'ok');
+    }catch(e){
+      showToast(`Couldn't publish: ${e.message}`, 'err');
+      commitBtn.disabled = false;
+    }finally{
+      commitBtnLabel.textContent = 'Commit changes';
+    }
+  });
+
+  document.getElementById('toolbarLogoutBtn').addEventListener('click', async () => {
+    if(isDirty && !(await confirmDialog('You have uncommitted changes that will be lost. Log out anyway?', 'Log out'))) return;
+    eraseCookie(ADMIN_SESSION_KEY);
+    window.location.reload();
+  });
+
+  // ---------------- Admin quick actions ----------------
+  async function toggleStatus(id){
+    const m = MEMBERS.find(x => x.id === id);
+    if(!m) return;
+    m.status = m.status === 'available' ? 'unavailable' : 'available';
+    m._dirty = true;
+    markDirty();
+    render();
+  }
+
+  async function removePerson(id){
+    const m = MEMBERS.find(x => x.id === id);
+    if(!m) return;
+    if(!(await confirmDialog(`Remove ${m.name} from the directory? This won't be permanent until you hit Commit.`, 'Remove'))) return;
+    MEMBERS = MEMBERS.filter(x => x.id !== id);
+    markDirty();
+    rebuildMarquee();
+    render();
+  }
+
+  const quickAddOverlay = document.getElementById('quickAddOverlay');
+  document.getElementById('quickAddBtn').addEventListener('click', () => {
+    document.getElementById('quickAddForm').reset();
+    quickAddOverlay.classList.add('open');
+  });
+  document.getElementById('quickAddCancelBtn').addEventListener('click', () => {
+    quickAddOverlay.classList.remove('open');
+  });
+  document.getElementById('quickAddForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('quickName').value.trim();
+    const role = document.getElementById('quickRole').value.trim();
+    const bio = document.getElementById('quickBio').value.trim();
+    if(!name || !role || !bio) return;
+
+    const nextId = MEMBERS.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+    MEMBERS.push({
+      id: nextId, name, role, bio,
+      gender: '', tags: [], status: 'available', image: '',
+      verified: false, contact: {}, schedule: '', rates: [], services: [],
+      portfolio: [], extraBio: [], bottomSections: [],
+      _dirty: true
+    });
+    markDirty();
+    rebuildMarquee();
+    render();
+    quickAddOverlay.classList.remove('open');
+    showToast(`${name} added to staged changes.`, 'ok');
+  });
+
+  // ---------------- Marquee ----------------
+  const track = document.getElementById('marqueeTrack');
+
+  function imageFor(member, seed){
+    return member.image || placeholderImg(seed, member.name.split(' ')[0]);
+  }
+
+  function makeItem(memberIndex){
+    const m = MEMBERS[memberIndex];
+    const a = document.createElement('a');
+    a.href = profileUrl(m.id);
+    a.setAttribute('aria-label', `View ${m.name}'s profile`);
+    const img = document.createElement('img');
+    img.src = imageFor(m, memberIndex);
+    img.alt = m.name;
+    a.appendChild(img);
+    return a;
+  }
+
+  const GAP = 32;
+  const SPEED = 55;
+  let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lastTime = null;
+  let widthsByMember = [];
+  let active = [];
+  let reservoir = [];
+
+  function shuffledIndices(){
+    const arr = MEMBERS.map((_, i) => i);
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function drawFromReservoir(){
+    if(reservoir.length === 0) reservoir = shuffledIndices();
+    return reservoir.shift();
+  }
+
+  function returnToReservoir(memberIndex){
+    reservoir.push(memberIndex);
+  }
+
+  function waitForImages(images){
+    return Promise.all([...images].map(img => {
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+    }));
+  }
+
+  async function preloadWidths(){
+    // Tiles are a fixed 230x155 (set in CSS), so the width is known
+    // without measuring — we just need the images cached before the
+    // first paint of the strip so nothing pops in late.
+    const TILE_W = 230;
+    widthsByMember = MEMBERS.map(() => TILE_W);
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute; visibility:hidden; top:-9999px; left:-9999px; display:flex;';
+    document.body.appendChild(probe);
+    const imgs = MEMBERS.map((m, i) => {
+      const img = document.createElement('img');
+      img.src = imageFor(m, i);
+      img.style.cssText = 'height:155px; width:230px; object-fit:cover;';
+      probe.appendChild(img);
+      return img;
+    });
+    await waitForImages(imgs);
+    probe.remove();
+  }
+
+  function spawnNext(startX){
+    const memberIndex = drawFromReservoir();
+    const el = makeItem(memberIndex);
+    const w = widthsByMember[memberIndex];
+    el.style.left = `${startX}px`;
+    track.appendChild(el);
+    active.push({ el, x: startX, w, memberIndex });
+  }
+
+  function primeInitialRow(){
+    const shellWidth = document.getElementById('marqueeShell').clientWidth;
+    let x = shellWidth;
+    while(x > -200 && MEMBERS.length){
+      spawnNext(x);
+      const last = active[active.length - 1];
+      x -= (last.w + GAP);
+    }
+  }
+
+  function tick(timestamp){
+    if(lastTime === null) lastTime = timestamp;
+    const dt = (timestamp - lastTime) / 1000;
+    lastTime = timestamp;
+
+    if(!paused && MEMBERS.length){
+      const distance = SPEED * dt;
+      const shellWidth = document.getElementById('marqueeShell').clientWidth;
+
+      active.forEach(item => {
+        item.x -= distance;
+        item.el.style.left = `${item.x}px`;
+      });
+
+      const rightmost = active.length
+        ? Math.max(...active.map(item => item.x + item.w))
+        : -Infinity;
+
+      if(rightmost + GAP <= shellWidth){
+        spawnNext(Math.max(shellWidth, rightmost + GAP));
+      }
+
+      active = active.filter(item => {
+        if(item.x + item.w < 0){
+          item.el.remove();
+          returnToReservoir(item.memberIndex);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  async function rebuildMarquee(){
+    active.forEach(item => item.el.remove());
+    active = [];
+    reservoir = [];
+    await preloadWidths();
+    reservoir = shuffledIndices();
+    primeInitialRow();
+  }
+
+  (async () => {
+    await rebuildMarquee();
+    requestAnimationFrame(tick);
+  })();
+
+  document.getElementById('marqueeShell').addEventListener('mouseenter', () => paused = true);
+  document.getElementById('marqueeShell').addEventListener('mouseleave', () => paused = false);
+
+  // ---------------- Directory grid + filters ----------------
+  const searchInput = document.getElementById('searchInput');
+  const availabilityFilter = document.getElementById('availabilityFilter');
+  const tagFilter = document.getElementById('tagFilter');
+  const grid = document.getElementById('grid');
+  const resultCount = document.getElementById('resultCount');
+
+  searchInput.addEventListener('input', render);
+  availabilityFilter.addEventListener('change', render);
+  tagFilter.addEventListener('change', render);
+
+  function populateTagFilter(){
+    const tags = [...new Set(MEMBERS.flatMap(m => m.tags || []))].sort();
+    const current = tagFilter.value;
+    tagFilter.innerHTML = '<option value="">All tags</option>' +
+      tags.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    if(tags.includes(current)) tagFilter.value = current;
+  }
+
+  function statusLabel(m){
+    return m.status === 'unavailable' ? 'Not Available' : 'Available';
+  }
+
+  function cardTemplate(m, idx){
+    const img = imageFor(m, idx);
+    const admin = isAdmin();
+    const tags = (m.tags || []).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
+    const verified = m.verified ? '<span class="verified-badge">✓ Verified</span>' : '';
+    const pill = `<span class="status-pill ${m.status === 'unavailable' ? 'away' : ''}">${statusLabel(m)}</span>`;
+    const rate = (m.rates || [])[0] ? `<span class="card-rate" title="Starting rate">${escapeHtml(m.rates[0].amount)}</span>` : '';
+    const firstContact = (Array.isArray(m.contacts) ? m.contacts : []).find(c => c.username || c.platform);
+    const contact = firstContact
+      ? `<span class="card-contact" title="${escapeHtml(firstContact.platform || 'Contact')}">✉ ${escapeHtml(firstContact.username || firstContact.platform)}</span>`
+      : '';
+
+    const media = `
+      <div class="card-media">
+        <img src="${img}" alt="${escapeHtml(m.name)}" loading="lazy" />
+        <div class="top-left">${admin ? `
+          <button class="icon-btn delete" title="Remove ${escapeHtml(m.name)}" data-action="remove" data-id="${m.id}">✕</button>
+          <label class="switch" title="Toggle availability">
+            <input type="checkbox" data-action="toggle" data-id="${m.id}" ${m.status === 'available' ? 'checked' : ''} />
+            <span class="track"></span>
+            <span class="thumb"></span>
+          </label>` : verified}
+        </div>
+        <div class="top-right">${pill}</div>
+      </div>`;
+
+    const body = `
+      <div class="card-body">
+        <p class="card-role">${escapeHtml(m.role)}</p>
+        <h3 class="card-name">${escapeHtml(m.name)}</h3>
+        ${m.gender ? `<p class="card-meta">${escapeHtml(m.gender)}</p>` : ''}
+        <p class="card-bio">${escapeHtml(m.bio)}</p>
+        <div class="card-tags">${tags}</div>
+        ${(rate || contact) ? `<div class="card-facts">${rate}${contact}</div>` : ''}
+        <div class="card-cta">View profile &raquo;</div>
+      </div>`;
+
+    if(admin){
+      return `<div class="card${m._dirty ? ' dirty' : ''}">${media}${body}</div>`;
+    }
+    return `<a class="card" href="${profileUrl(m.id)}">${media}${body}</a>`;
+  }
+
+  function render(){
+    const q = searchInput.value.trim().toLowerCase();
+    const avail = availabilityFilter.value;
+    const tag = tagFilter.value;
+
+    const filtered = MEMBERS.filter(m => {
+      if(avail !== 'all' && m.status !== avail) return false;
+      if(tag && !(m.tags || []).includes(tag)) return false;
+      if(q){
+        const haystack = `${m.name} ${(m.tags || []).join(' ')}`.toLowerCase();
+        if(!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    resultCount.textContent = `${filtered.length} member${filtered.length === 1 ? '' : 's'} found`;
+    populateTagFilter();
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty-state">No members match those filters. Try clearing the search or filters.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(m => cardTemplate(m, MEMBERS.indexOf(m))).join('');
+
+    if(isAdmin()){
+      grid.querySelectorAll('[data-action="remove"]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+          removePerson(Number(btn.dataset.id));
+        });
+      });
+      grid.querySelectorAll('[data-action="toggle"]').forEach(input => {
+        input.addEventListener('click', e => {
+          e.preventDefault();
+          toggleStatus(Number(input.dataset.id));
+        });
+      });
+    }
+  }
+
+  render();
+
+  // ---------------- Worker login (persistent session) ----------------
+  (() => {
+    const WORKER_SESSION_KEY = 'prism_worker_session';
+    let sessionToken = null;
+
+    const overlay = document.getElementById('workerLoginOverlay');
+    const loginStep = document.getElementById('workerLoginStep');
+    const editStep = document.getElementById('workerEditStep');
+    const workerLoginLink = document.getElementById('workerLoginLink');
+
+    function loadStoredToken(){
+      try{
+        const stored = JSON.parse(localStorage.getItem(WORKER_SESSION_KEY) || 'null');
+        return stored && stored.token ? stored.token : null;
+      }catch(e){ return null; }
+    }
+    function storeToken(token){
+      localStorage.setItem(WORKER_SESSION_KEY, JSON.stringify({ token }));
+    }
+    function clearStoredToken(){
+      localStorage.removeItem(WORKER_SESSION_KEY);
+    }
+
+    function fillEditForm(body){
+      document.getElementById('workerEditTitle').textContent = `Edit your profile — ${body.name}`;
+      document.getElementById('workerEditStatus').value = body.current.status || 'available';
+      document.getElementById('workerEditBio').value = body.current.bio || '';
+      document.getElementById('workerEditTags').value = (body.current.tags || []).join(', ');
+      document.getElementById('workerSaveError').textContent = '';
+      document.getElementById('workerSaveSuccess').textContent = '';
+    }
+
+    function showLoginStep(){
+      loginStep.style.display = 'block';
+      editStep.style.display = 'none';
+      document.getElementById('workerCodeInput').value = '';
+      document.getElementById('workerLoginError').textContent = '';
+    }
+
+    function showEditStep(body){
+      loginStep.style.display = 'none';
+      editStep.style.display = 'block';
+      fillEditForm(body);
+    }
+
+    async function resumeSession(){
+      const token = sessionToken || loadStoredToken();
+      if(!token) return null;
+      try{
+        const res = await fetch('/.netlify/functions/publish-worker-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        if(!res.ok){
+          sessionToken = null;
+          clearStoredToken();
+          return null;
+        }
+        const body = await res.json();
+        sessionToken = body.token;
+        storeToken(sessionToken);
+        return body;
+      }catch(e){
+        return null;
+      }
+    }
+
+    (async () => {
+      const session = await resumeSession();
+      if(session) workerLoginLink.textContent = `Worker: ${session.name}`;
+    })();
+
+    workerLoginLink.addEventListener('click', async () => {
+      overlay.classList.add('open');
+      const session = await resumeSession();
+      if(session){
+        workerLoginLink.textContent = `Worker: ${session.name}`;
+        showEditStep(session);
+        return;
+      }
+      showLoginStep();
+    });
+
+    document.getElementById('workerLoginCancelBtn').addEventListener('click', () => {
+      overlay.classList.remove('open');
+    });
+
+    document.getElementById('workerCancelEditBtn').addEventListener('click', () => {
+      overlay.classList.remove('open');
+    });
+
+    document.getElementById('workerLoginSubmitBtn').addEventListener('click', async () => {
+      const code = document.getElementById('workerCodeInput').value.trim();
+      const errEl = document.getElementById('workerLoginError');
+      if(!code){ errEl.textContent = 'Enter your code.'; return; }
+
+      try{
+        const res = await fetch('/.netlify/functions/publish-worker-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const body = await res.json();
+
+        if(!res.ok){
+          errEl.textContent = body.error || 'Login failed.';
+          return;
+        }
+
+        sessionToken = body.token;
+        storeToken(sessionToken);
+        workerLoginLink.textContent = `Worker: ${body.name}`;
+        showEditStep(body);
+      }catch(e){
+        errEl.textContent = `Network error: ${e.message}`;
+      }
+    });
+
+    document.getElementById('workerLogoutBtn').addEventListener('click', () => {
+      sessionToken = null;
+      clearStoredToken();
+      workerLoginLink.textContent = 'Worker Login';
+      overlay.classList.remove('open');
+      showToast('Logged out.', 'ok');
+    });
+
+    document.getElementById('workerSaveBtn').addEventListener('click', async () => {
+      const errEl = document.getElementById('workerSaveError');
+      const okEl = document.getElementById('workerSaveSuccess');
+      errEl.textContent = '';
+      okEl.textContent = '';
+
+      const updates = {
+        status: document.getElementById('workerEditStatus').value,
+        bio: document.getElementById('workerEditBio').value.trim(),
+        tags: document.getElementById('workerEditTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
+      };
+
+      try{
+        const res = await fetch('/.netlify/functions/publish-worker-edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: sessionToken, updates })
+        });
+        const body = await res.json();
+
+        if(!res.ok){
+          errEl.textContent = (body.error || 'Save failed.') + ' Try logging in again.';
+          if(res.status === 401){
+            sessionToken = null;
+            clearStoredToken();
+            workerLoginLink.textContent = 'Worker Login';
+            showLoginStep();
+          }
+          return;
+        }
+
+        if(body.token){
+          sessionToken = body.token;
+          storeToken(sessionToken);
+        }
+
+        okEl.textContent = 'Saved. Your changes are live now.';
+        showToast('Changes saved and published.', 'ok');
+      }catch(e){
+        errEl.textContent = `Network error: ${e.message}`;
+      }
+    });
+  })();
+
+})();
+</script>
+</body>
+</html>
