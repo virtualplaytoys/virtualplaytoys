@@ -89,9 +89,12 @@
       ],
       "blocked": [
         "taboo kinks",
-        "unhiginic"
+        "unhygenic"
       ]
     },
-    "schedule": "weekdays 10am - 6pm pst"
+    "schedule": "weekdays 10am - 6pm pst",
+    "contacts": [],
+    "links": [],
+    "updatedAt": "2026-09-12T19:53:07.029Z"
   }
 ]
