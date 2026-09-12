@@ -101,6 +101,31 @@
     margin:-6px 0 16px;
   }
   .draft-notice.visible{ display:block; }
+  /* ---------- Availability editor ---------- */
+  .day-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .day-chip{
+    font:inherit; font-size:0.8rem; font-weight:600;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .day-chip:hover{ border-color:var(--accent); color:var(--text); }
+  .day-chip.on{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .avail-times{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .avail-hint{ font-size:0.78rem; color:var(--good); margin:2px 0 8px; min-height:1em; }
+  /* ---------- Carousel (featured) star toggle ---------- */
+  .icon-btn.featured-on{ color:#e8b84f; }
+  .icon-btn.featured-on:hover{ border-color:#e8b84f; }
+  .icon-btn.featured-off{ color:var(--text-faint); }
+  .icon-btn.featured-off:hover{ color:#e8b84f; border-color:#e8b84f; }
 </style>
 </head>
 <body>
@@ -209,6 +234,12 @@
         </label>
       </div>
       <div class="field">
+        <label class="checkbox-row" style="margin:0 0 10px;">
+          <input type="checkbox" id="profileFeatured" />
+          Show in the directory photo carousel (top of the public page)
+        </label>
+      </div>
+      <div class="field">
         <label for="profileImageFile">Picture</label>
         <input type="file" id="profileImageFile" accept="image/*" />
         <p class="field-hint">Leave blank to keep a generated placeholder image.</p>
@@ -254,7 +285,42 @@
       </div>
 
       <div class="content-section">
-        <p class="content-section-title">Availability schedule</p>
+        <p class="content-section-title">Availability (their timezone)</p>
+        <div class="field" style="margin-bottom:10px;">
+          <label for="contentAvailTz">Their timezone</label>
+          <input type="text" id="contentAvailTz" list="timezoneOptions" placeholder="e.g. Pacific/Auckland" autocomplete="off" />
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Days they're usually online</label>
+          <div class="day-chips" id="contentAvailDays">
+            <button type="button" class="day-chip" data-day="Sun">Sun</button>
+            <button type="button" class="day-chip" data-day="Mon">Mon</button>
+            <button type="button" class="day-chip" data-day="Tue">Tue</button>
+            <button type="button" class="day-chip" data-day="Wed">Wed</button>
+            <button type="button" class="day-chip" data-day="Thu">Thu</button>
+            <button type="button" class="day-chip" data-day="Fri">Fri</button>
+            <button type="button" class="day-chip" data-day="Sat">Sat</button>
+          </div>
+        </div>
+        <div class="avail-times">
+          <div class="field">
+            <label for="contentAvailStart">Usually online from</label>
+            <input type="time" id="contentAvailStart" />
+          </div>
+          <div class="field">
+            <label for="contentAvailEnd">Until</label>
+            <input type="time" id="contentAvailEnd" />
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label for="contentAvailNote">Note (optional)</label>
+          <input type="text" id="contentAvailNote" placeholder="e.g. usually on later on Fridays" />
+        </div>
+        <p class="avail-hint" id="contentAvailHint"></p>
+      </div>
+
+      <div class="content-section">
+        <p class="content-section-title">Availability schedule (free text, optional)</p>
         <div class="field" style="margin-bottom:0;">
           <textarea id="scheduleInput" placeholder="e.g. Mon–Fri: 6pm–11pm EST&#10;Weekends: usually online, message first"></textarea>
         </div>
@@ -520,6 +586,7 @@
       renderAdminContacts();
       renderAdminLinks();
       document.getElementById('profileVerified').checked = !!member.verified;
+      document.getElementById('profileFeatured').checked = member.featured !== false;
       if(member.image){
         document.getElementById('profileImageData').value = member.image;
         const preview = document.getElementById('profileImagePreview');
@@ -529,6 +596,8 @@
     }else{
       editingId = null;
       document.getElementById('profileModalTitle').textContent = 'Add profile';
+      // New profiles start in the carousel — the admin can uncheck to hold them back.
+      document.getElementById('profileFeatured').checked = true;
     }
 
     profileOverlay.classList.add('open');
@@ -573,6 +642,7 @@
         .map(l => ({ label: (l.label || '').trim(), url: (l.url || '').trim() }))
         .filter(l => l.url),
       verified: document.getElementById('profileVerified').checked,
+      featured: document.getElementById('profileFeatured').checked,
       image: document.getElementById('profileImageData').value || ''
     };
 
@@ -712,6 +782,76 @@
   const contentOverlay = document.getElementById('contentOverlay');
   let contentMemberId = null;
   let contentDraft = null;
+  let contentAvailDraft = null;
+
+  function renderContentAvail(){
+    if(!contentAvailDraft) return;
+    let dl = document.getElementById('timezoneOptions');
+    if(!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'timezoneOptions';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = (typeof COMMON_TIMEZONES !== 'undefined' ? COMMON_TIMEZONES : []).map(z => `<option value="${z}">`).join('');
+    document.getElementById('contentAvailTz').value = contentAvailDraft.timezone || '';
+    document.querySelectorAll('#contentAvailDays .day-chip').forEach(ch => {
+      ch.classList.toggle('on', contentAvailDraft.days.includes(ch.dataset.day));
+    });
+    document.getElementById('contentAvailStart').value = contentAvailDraft.start || '';
+    document.getElementById('contentAvailEnd').value = contentAvailDraft.end || '';
+    document.getElementById('contentAvailNote').value = contentAvailDraft.note || '';
+    updateContentAvailHint();
+  }
+
+  function updateContentAvailHint(){
+    const hint = document.getElementById('contentAvailHint');
+    if(!hint || !contentAvailDraft) return;
+    const converted = convertAvailability({
+      timezone: contentAvailDraft.timezone.trim(),
+      days: contentAvailDraft.days,
+      start: contentAvailDraft.start,
+      end: contentAvailDraft.end
+    });
+    if(converted){
+      hint.textContent = `Guests will see: ${fmtDayList(converted.days)} ${converted.start} – ${converted.end} (their local time)`;
+      hint.style.color = 'var(--good)';
+    }else{
+      const missing = [];
+      if(!isValidTimeZone(contentAvailDraft.timezone.trim())) missing.push('a valid timezone');
+      if(!contentAvailDraft.days.length) missing.push('at least one day');
+      if(!contentAvailDraft.start) missing.push('a start time');
+      hint.textContent = missing.length ? `Pick ${missing.join(' and ')} to show their hours to guests.` : '';
+      hint.style.color = 'var(--warn)';
+    }
+  }
+
+  document.getElementById('contentAvailTz').addEventListener('input', () => {
+    if(!contentAvailDraft) return;
+    contentAvailDraft.timezone = document.getElementById('contentAvailTz').value;
+    updateContentAvailHint();
+  });
+  document.querySelectorAll('#contentAvailDays .day-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      if(!contentAvailDraft) return;
+      const d = ch.dataset.day;
+      contentAvailDraft.days = contentAvailDraft.days.includes(d)
+        ? contentAvailDraft.days.filter(x => x !== d)
+        : [...contentAvailDraft.days, d];
+      contentAvailDraft.days.sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b));
+      renderContentAvail();
+    });
+  });
+  ['contentAvailStart', 'contentAvailEnd'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if(!contentAvailDraft) return;
+      contentAvailDraft[id === 'contentAvailStart' ? 'start' : 'end'] = document.getElementById(id).value;
+      updateContentAvailHint();
+    });
+  });
+  document.getElementById('contentAvailNote').addEventListener('input', () => {
+    if(!contentAvailDraft) return;
+    contentAvailDraft.note = document.getElementById('contentAvailNote').value;
+  });
 
   function nextEntryId(list){
     return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
@@ -727,10 +867,18 @@
       extraBio: JSON.parse(JSON.stringify(member.extraBio || [])),
       bottomSections: JSON.parse(JSON.stringify(member.bottomSections || []))
     };
+    contentAvailDraft = {
+      timezone: (member.availability && member.availability.timezone) || '',
+      days: Array.isArray(member.availability && member.availability.days) ? [...member.availability.days] : [],
+      start: (member.availability && member.availability.start) || '',
+      end: (member.availability && member.availability.end) || '',
+      note: (member.availability && member.availability.note) || ''
+    };
     document.getElementById('contentModalTitle').textContent = `Manage content — ${member.name}`;
     document.getElementById('servicesYesInput').value = (contentDraft.services.offered || []).join('\n');
     document.getElementById('servicesNoInput').value = (contentDraft.services.blocked || []).join('\n');
     document.getElementById('scheduleInput').value = contentDraft.schedule;
+    renderContentAvail();
     renderContentLists();
     contentOverlay.classList.add('open');
   }
@@ -749,6 +897,21 @@
       blocked: document.getElementById('servicesNoInput').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 25)
     };
     MEMBERS[idx].schedule = document.getElementById('scheduleInput').value.trim();
+    {
+      const hasAny = contentAvailDraft.timezone.trim() || contentAvailDraft.start || contentAvailDraft.end ||
+        contentAvailDraft.days.length || contentAvailDraft.note.trim();
+      if(!hasAny){
+        delete MEMBERS[idx].availability; // fully emptied → clear
+      }else if(contentAvailDraft.timezone.trim() && contentAvailDraft.start && contentAvailDraft.days.length){
+        MEMBERS[idx].availability = {
+          timezone: contentAvailDraft.timezone.trim(),
+          days: [...contentAvailDraft.days],
+          start: contentAvailDraft.start,
+          end: contentAvailDraft.end || contentAvailDraft.start,
+          note: contentAvailDraft.note.trim()
+        };
+      } // partial → keep what's stored
+    }
     MEMBERS[idx].portfolio = contentDraft.portfolio;
     MEMBERS[idx].extraBio = contentDraft.extraBio;
     MEMBERS[idx].bottomSections = contentDraft.bottomSections;
@@ -989,11 +1152,13 @@
   function cardTemplate(m, idx){
     const img = imageFor(m, idx);
     const verified = m.verified ? '<span class="verified-badge">✓</span>' : '';
+    const featured = m.featured !== false;
     return `
       <div class="card">
         <div class="card-admin-controls">
           <button class="icon-btn edit" title="Edit ${escapeHtml(m.name)}" data-action="edit" data-id="${m.id}">✎</button>
           <button class="icon-btn content" title="Manage ${escapeHtml(m.name)}'s profile page content" data-action="content" data-id="${m.id}">🖼</button>
+          <button class="icon-btn ${featured ? 'featured-on' : 'featured-off'}" title="${featured ? 'Remove from' : 'Add to'} the directory photo carousel" data-action="toggle-featured" data-id="${m.id}">${featured ? '★' : '☆'}</button>
           <button class="icon-btn" title="Regenerate ${escapeHtml(m.name)}'s worker login key" data-action="regen-code" data-id="${m.id}">🔑</button>
           <button class="icon-btn delete" title="Delete ${escapeHtml(m.name)}" data-action="delete" data-id="${m.id}">✕</button>
         </div>
@@ -1036,6 +1201,21 @@
     grid.querySelectorAll('[data-action="content"]').forEach(btn => {
       btn.addEventListener('click', () => {
         openContentModal(MEMBERS.find(m => m.id === Number(btn.dataset.id)));
+      });
+    });
+    grid.querySelectorAll('[data-action="toggle-featured"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const member = MEMBERS.find(m => m.id === Number(btn.dataset.id));
+        if(!member) return;
+        member.featured = member.featured === false; // false → true (on); on → false (off)
+        stageChange(MEMBERS);
+        render();
+        showToast(
+          member.featured === false
+            ? `${member.name} removed from the carousel (staged).`
+            : `${member.name} added to the carousel (staged).`,
+          'ok'
+        );
       });
     });
     grid.querySelectorAll('[data-action="delete"]').forEach(btn => {

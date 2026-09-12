@@ -195,6 +195,22 @@
   .contact-row .contact-username{ font-size:1.05rem; font-weight:700; color:var(--text); word-break:break-all; }
   .contact-note{ font-size:0.78rem; color:var(--text-faint); margin:12px 0 0; line-height:1.55; }
 
+  /* ---------- Availability block (profile) ---------- */
+  .avail-block{ margin:0 0 14px; }
+  .schedule-box .avail-block:last-child{ margin-bottom:0; }
+  .avail-tz{
+    font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--accent); margin-bottom:6px;
+  }
+  .avail-when{ font-size:1.12rem; font-weight:700; color:var(--text); }
+  .avail-days{ margin-right:8px; }
+  .avail-time{ color:var(--accent); }
+  .avail-converted{ font-size:0.82rem; color:var(--text-dim); margin-top:5px; line-height:1.5; }
+  .avail-converted strong{ color:var(--text); }
+  .avail-note{ font-size:0.78rem; color:var(--text-faint); margin-top:7px; font-style:italic; }
+  .avail-live{ font-size:0.72rem; color:var(--text-faint); margin-top:9px; padding-top:8px; border-top:1px dashed var(--border); }
+  .avail-live-guest{ color:var(--good); font-weight:600; }
+
   /* ---------- Hero external links ---------- */
   .profile-links{ display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 4px; }
   .profile-link{
@@ -257,6 +273,27 @@
     display:block;
     margin-top:9px;
   }
+  /* ---------- Availability editor ---------- */
+  .day-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .day-chip{
+    font:inherit; font-size:0.8rem; font-weight:600;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .day-chip:hover{ border-color:var(--accent); color:var(--text); }
+  .day-chip.on{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .avail-times{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .avail-hint{ font-size:0.78rem; color:var(--good); margin:2px 0 8px; min-height:1em; }
+  .field-hint{ font-size:0.75rem; color:var(--text-faint); margin:0; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -359,7 +396,44 @@
 
         <!-- ---- Schedule ---- -->
         <div class="wcm-section">
-          <p class="wcm-section-title">Availability schedule</p>
+          <p class="wcm-section-title">Availability (your timezone)</p>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="wcmAvailTz">Your timezone</label>
+            <input type="text" id="wcmAvailTz" list="timezoneOptions" placeholder="e.g. Pacific/Auckland" autocomplete="off" />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Days you're usually online</label>
+            <div class="day-chips" id="wcmAvailDays">
+              <button type="button" class="day-chip" data-day="Sun">Sun</button>
+              <button type="button" class="day-chip" data-day="Mon">Mon</button>
+              <button type="button" class="day-chip" data-day="Tue">Tue</button>
+              <button type="button" class="day-chip" data-day="Wed">Wed</button>
+              <button type="button" class="day-chip" data-day="Thu">Thu</button>
+              <button type="button" class="day-chip" data-day="Fri">Fri</button>
+              <button type="button" class="day-chip" data-day="Sat">Sat</button>
+            </div>
+          </div>
+          <div class="avail-times">
+            <div class="field">
+              <label for="wcmAvailStart">Usually online from</label>
+              <input type="time" id="wcmAvailStart" />
+            </div>
+            <div class="field">
+              <label for="wcmAvailEnd">Until</label>
+              <input type="time" id="wcmAvailEnd" />
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="wcmAvailNote">Note (optional)</label>
+            <input type="text" id="wcmAvailNote" placeholder="e.g. usually on later on Fridays" />
+          </div>
+          <p class="avail-hint" id="wcmAvailHint"></p>
+          <p class="field-hint">Guests see this converted to <strong>their</strong> timezone automatically — enter it once in your time. The old free-text schedule box is still there below if you'd rather write it yourself.</p>
+        </div>
+
+        <!-- ---- Schedule (free text) ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Availability schedule (free text, optional)</p>
           <div class="field" style="margin-bottom:0;">
             <textarea id="workerEditSchedule" placeholder="e.g. Mon–Fri: 6pm–11pm EST&#10;Weekends: usually online, message first"></textarea>
           </div>
@@ -466,6 +540,7 @@
     const hasContact = contacts.length > 0;
     const links = (Array.isArray(m.links) ? m.links : []).filter(l => l.url);
     const hasSchedule = !!(m.schedule && m.schedule.trim());
+    const avail = (m.availability && convertAvailability(m.availability)) || null;
     const rates = m.rates || [];
     const services = m.services || {};
 
@@ -531,15 +606,28 @@
         </div>
       </div>` : ''}
 
-      ${(hasSchedule || hasContact) ? `
+      ${(avail || hasSchedule || hasContact) ? `
       <div class="schedule-section">
         <p class="col-title">Availability &amp; booking</p>
         <div class="schedule-contact-grid">
-          ${hasSchedule ? `
           <div class="box-2 schedule-box">
+            ${avail ? `
+            <div class="avail-block">
+              <div class="avail-tz">${escapeHtml(timezoneLabel(m.availability.timezone))}</div>
+              <div class="avail-when">
+                <span class="avail-days">${escapeHtml(fmtDayList(avail.workerDays))}</span>
+                ${avail.workerStart === avail.workerEnd ? `<span class="avail-time">from ${escapeHtml(avail.workerStart)}</span>` : `<span class="avail-time">${escapeHtml(avail.workerStart)} – ${escapeHtml(avail.workerEnd)}</span>`}
+              </div>
+              <div class="avail-converted">
+                = <strong>${escapeHtml(timezoneLabel(avail.tz))}</strong> (your time): ${escapeHtml(fmtDayList(avail.days))} ${escapeHtml(avail.start)} – ${escapeHtml(avail.end)}
+              </div>
+              ${m.availability.note ? `<div class="avail-note">${escapeHtml(m.availability.note)}</div>` : ''}
+              <div class="avail-live">It's ${escapeHtml(timeInZone(m.availability.timezone))} there right now — <span class="avail-live-guest">${escapeHtml(fmtHm(new Date().getHours() * 60 + new Date().getMinutes()))} for you</span></div>
+            </div>` : ''}
+            ${hasSchedule ? `
             <h3>Online times</h3>
-            <pre>${escapeHtml(m.schedule)}</pre>
-          </div>` : ''}
+            <pre>${escapeHtml(m.schedule)}</pre>` : ''}
+          </div>
           ${hasContact ? `
           <div class="box-2 contact-box" id="contact-section">
             <h3>Contact</h3>
@@ -637,6 +725,52 @@
   let currentMember = null;
   let sessionVerifiedForId = null;
   let wcmDraft = null;
+  // Availability editor state (kept separate from wcmDraft — it's plain
+  // inputs, not a rendered list): { timezone, days:[], start, end, note }
+  let availDraft = null;
+
+  function renderAvailDraft(){
+    if(!availDraft) return;
+    let dl = document.getElementById('timezoneOptions');
+    if(!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'timezoneOptions';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = (typeof COMMON_TIMEZONES !== 'undefined' ? COMMON_TIMEZONES : []).map(z => `<option value="${z}">`).join('');
+    document.getElementById('wcmAvailTz').value = availDraft.timezone || '';
+    document.querySelectorAll('#wcmAvailDays .day-chip').forEach(ch => {
+      ch.classList.toggle('on', availDraft.days.includes(ch.dataset.day));
+    });
+    document.getElementById('wcmAvailStart').value = availDraft.start || '';
+    document.getElementById('wcmAvailEnd').value = availDraft.end || '';
+    document.getElementById('wcmAvailNote').value = availDraft.note || '';
+    updateAvailHint();
+  }
+
+  // Live feedback: shows what guests will see, or why the block won't save.
+  function updateAvailHint(){
+    const hint = document.getElementById('wcmAvailHint');
+    if(!hint || !availDraft) return;
+    const clean = {
+      timezone: availDraft.timezone.trim(),
+      days: availDraft.days,
+      start: availDraft.start,
+      end: availDraft.end
+    };
+    const converted = convertAvailability(clean);
+    if(converted){
+      hint.textContent = `Guests will see: ${fmtDayList(converted.days)} ${converted.start} – ${converted.end} (their local time)`;
+      hint.style.color = 'var(--good)';
+    }else{
+      const missing = [];
+      if(!isValidTimeZone(clean.timezone)) missing.push('a valid timezone');
+      if(!clean.days.length) missing.push('at least one day');
+      if(!clean.start) missing.push('a start time');
+      hint.textContent = missing.length ? `Pick ${missing.join(' and ')} to show your hours to guests.` : '';
+      hint.style.color = 'var(--warn)';
+    }
+  }
   let pendingImageDataUrl = null;
 
   function updateEditButtonVisibility(){
@@ -699,6 +833,14 @@
     document.getElementById('workerEditBio').value = c.bio || '';
     document.getElementById('workerEditTags').value = (c.tags || []).join(', ');
     document.getElementById('workerEditSchedule').value = c.schedule || '';
+    availDraft = {
+      timezone: (c.availability && c.availability.timezone) || '',
+      days: Array.isArray(c.availability && c.availability.days) ? [...c.availability.days] : [],
+      start: (c.availability && c.availability.start) || '',
+      end: (c.availability && c.availability.end) || '',
+      note: (c.availability && c.availability.note) || ''
+    };
+    renderAvailDraft();
     document.getElementById('workerEditServicesYes').value = ((c.services && c.services.offered) || []).join('\n');
     document.getElementById('workerEditServicesNo').value = ((c.services && c.services.blocked) || []).join('\n');
     const preview = document.getElementById('workerEditImagePreview');
@@ -1091,6 +1233,36 @@
     });
   }
 
+  // ---------------- Availability editor bindings (static elements) ----------------
+  document.getElementById('wcmAvailTz').addEventListener('input', () => {
+    if(!availDraft) return;
+    availDraft.timezone = document.getElementById('wcmAvailTz').value;
+    updateAvailHint();
+  });
+  document.querySelectorAll('#wcmAvailDays .day-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      if(!availDraft) return;
+      const d = ch.dataset.day;
+      availDraft.days = availDraft.days.includes(d)
+        ? availDraft.days.filter(x => x !== d)
+        : [...availDraft.days, d];
+      // Keep editor order Sun→Sat regardless of click order.
+      availDraft.days.sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b));
+      renderAvailDraft();
+    });
+  });
+  ['wcmAvailStart', 'wcmAvailEnd'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if(!availDraft) return;
+      availDraft[id === 'wcmAvailStart' ? 'start' : 'end'] = document.getElementById(id).value;
+      updateAvailHint();
+    });
+  });
+  document.getElementById('wcmAvailNote').addEventListener('input', () => {
+    if(!availDraft) return;
+    availDraft.note = document.getElementById('wcmAvailNote').value;
+  });
+
   document.getElementById('wcmAddRateBtn').addEventListener('click', () => {
     if(!wcmDraft) return;
     wcmDraft.rates.push({ id: nextWcmId(wcmDraft.rates), label: '', amount: '' });
@@ -1143,6 +1315,21 @@
         .map(l => ({ label: (l.label || '').trim(), url: (l.url || '').trim() }))
         .filter(l => l.url),
       schedule: document.getElementById('workerEditSchedule').value.trim(),
+      availability: (() => {
+        if(!availDraft) return undefined;
+        const hasAny = availDraft.timezone.trim() || availDraft.start || availDraft.end ||
+          availDraft.days.length || availDraft.note.trim();
+        if(!hasAny) return {}; // fully emptied → server clears the field
+        // Complete entry saves; partial entry keeps what's stored
+        // (the hint tells the worker what's still missing).
+        return (availDraft.timezone.trim() && availDraft.start && availDraft.days.length) ? {
+          timezone: availDraft.timezone.trim(),
+          days: [...availDraft.days],
+          start: availDraft.start,
+          end: availDraft.end || availDraft.start,
+          note: availDraft.note.trim()
+        } : undefined;
+      })(),
       rates: wcmDraft.rates.filter(r => r.label.trim() || r.amount.trim())
         .map(r => ({ id: r.id, label: r.label.trim(), amount: r.amount.trim() })),
       services: {

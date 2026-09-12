@@ -121,9 +121,17 @@ typed code for publish) if that matters for your deployment.
 - **Worker-secrets visibility** — keep `worker-secrets.json` out of any
   other host/CDN config; Netlify blocks it via `netlify.toml`.
 - **Data model note** — profiles support: `id, name, role, gender,
-  status, bio, tags[], image, verified, contact{label,handle},
+  status, bio, tags[], image, verified, contacts[{platform,username}],
+  links[{label,url}], availability{timezone,days[],start,end,note},
   schedule, rates[{label,amount}], services{offered[],blocked[]},
   portfolio[{id,title,images[]}], extraBio[{id,title,text}],
   bottomSections[{id,title,image,text}], updatedAt`. The functions
   validate every worker-submitted field's shape and reject bad saves
   before writing.
+- **Availability & timezones** — a worker enters their online hours
+  once, in their own timezone (`availability`: IANA zone, day chips,
+  start/end). Profile pages convert it live to each visitor's local
+  timezone (see `convertAvailability` in `assets/ui.js`), show both
+  versions plus "it's HH:MM there right now", and live clocks use
+  each zone's current DST offset. The free-text `schedule` field is
+  still available alongside it.

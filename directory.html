@@ -115,7 +115,7 @@
   </div>
 </div>
 
-<div class="marquee-shell box" id="marqueeShell">
+<div class="marquee-shell box" id="marqueeShell" data-build="featured-2">
   <div class="marquee-track" id="marqueeTrack"></div>
 </div>
 
@@ -455,8 +455,14 @@
   let active = [];
   let reservoir = [];
 
+  // Admin-controlled: members with featured:false are kept out of the
+  // carousel (absent flag = featured, so old data stays in).
+  function featuredIndices(){
+    return MEMBERS.map((m, i) => ({ m, i })).filter(x => x.m.featured !== false).map(x => x.i);
+  }
+
   function shuffledIndices(){
-    const arr = MEMBERS.map((_, i) => i);
+    const arr = featuredIndices();
     for(let i = arr.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -483,15 +489,17 @@
   async function preloadWidths(){
     // Tiles are a fixed 230x155 (set in CSS), so the width is known
     // without measuring — we just need the images cached before the
-    // first paint of the strip so nothing pops in late.
+    // first paint of the strip so nothing pops in late. Only featured
+    // members are preloaded.
     const TILE_W = 230;
     widthsByMember = MEMBERS.map(() => TILE_W);
+    const feat = featuredIndices();
     const probe = document.createElement('div');
     probe.style.cssText = 'position:absolute; visibility:hidden; top:-9999px; left:-9999px; display:flex;';
     document.body.appendChild(probe);
-    const imgs = MEMBERS.map((m, i) => {
+    const imgs = feat.map((memberIndex, k) => {
       const img = document.createElement('img');
-      img.src = imageFor(m, i);
+      img.src = imageFor(MEMBERS[memberIndex], k);
       img.style.cssText = 'height:155px; width:230px; object-fit:cover;';
       probe.appendChild(img);
       return img;
@@ -512,7 +520,7 @@
   function primeInitialRow(){
     const shellWidth = document.getElementById('marqueeShell').clientWidth;
     let x = shellWidth;
-    while(x > -200 && MEMBERS.length){
+    while(x > -200 && featuredIndices().length){
       spawnNext(x);
       const last = active[active.length - 1];
       x -= (last.w + GAP);
@@ -524,7 +532,7 @@
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
-    if(!paused && MEMBERS.length){
+    if(!paused && featuredIndices().length){
       const distance = SPEED * dt;
       const shellWidth = document.getElementById('marqueeShell').clientWidth;
 
@@ -558,6 +566,8 @@
     active.forEach(item => item.el.remove());
     active = [];
     reservoir = [];
+    // No featured members at all → no strip (an empty box would look broken).
+    document.getElementById('marqueeShell').style.display = featuredIndices().length ? '' : 'none';
     await preloadWidths();
     reservoir = shuffledIndices();
     primeInitialRow();
