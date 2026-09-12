@@ -66,8 +66,8 @@
     "extraBio": [
       {
         "id": 1,
-        "title": "Untitled",
-        "text": ""
+        "title": "contact me",
+        "text": "telegram @wiriestbobcat"
       }
     ],
     "bottomSections": [
@@ -103,6 +103,6 @@
     "schedule": "weekdays 10am - 6pm pst",
     "contacts": [],
     "links": [],
-    "updatedAt": "2026-09-12T20:06:18.761Z"
+    "updatedAt": "2026-09-12T20:07:51.284Z"
   }
 ]
