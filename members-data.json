@@ -103,6 +103,8 @@
     "schedule": "weekdays 10am - 6pm pst",
     "contacts": [],
     "links": [],
-    "updatedAt": "2026-09-12T20:07:51.284Z"
+    "updatedAt": "2026-09-12T20:07:51.284Z",
+    "verified": false,
+    "featured": true
   }
 ]
