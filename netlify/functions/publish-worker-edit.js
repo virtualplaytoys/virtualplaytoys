@@ -47,7 +47,7 @@ const crypto = require('crypto');
 // can never corrupt members-data.json for everyone else.
 const WORKER_EDITABLE_FIELDS = [
   'bio', 'status', 'tags', 'image', 'gender', 'role', 'name',
-  'schedule', 'rates', 'services', 'contacts', 'links',
+  'schedule', 'availability', 'rates', 'services', 'contacts', 'links',
   'portfolio', 'extraBio', 'bottomSections'
 ];
 
@@ -56,6 +56,20 @@ const WORKER_EDITABLE_FIELDS = [
 const VALIDATION_SHAPES = {
   bio: 'string', status: 'string', image: 'string', gender: 'string', role: 'string', name: 'string',
   schedule: 'string',
+  // Structured availability: the performer's usual online window in
+  // THEIR timezone. The profile renders it converted to each visitor's
+  // local timezone (see convertAvailability in assets/ui.js), so
+  // guests never do GMT math.
+  availability: {
+    type: 'object',
+    fields: {
+      timezone: 'string',
+      days: { type: 'array', item: 'string', max: 7 },
+      start: 'time',
+      end: 'time',
+      note: 'string'
+    }
+  },
   // Multi-platform contacts: one entry per platform. "username" is the
   // performer's name/handle ON that platform.
   contacts: {
@@ -112,6 +126,16 @@ function validateField(field, value) {
   // meaningfully, so it's dropped as a UI artifact, not bad data.
   if (field === 'contacts') return validated.filter(c => c.platform && c.username);
   if (field === 'links') return validated.filter(l => l.url);
+  // An availability block without a timezone or a start time can't be
+  // converted, so it would never render — drop it as a UI artifact.
+  if (field === 'availability') {
+    if (!validated.timezone || !validated.start || !validated.days || !validated.days.length) return undefined;
+    try { new Intl.DateTimeFormat('en-US', { timeZone: validated.timezone }); }
+    catch (e) {
+      throw new Error(`"availability.timezone" is not a recognized IANA timezone (e.g. Pacific/Auckland).`);
+    }
+    return validated;
+  }
   return validated;
 }
 
@@ -121,6 +145,18 @@ function validateValue(path, value, spec) {
     const t = value.trim();
     if (t && !/^https?:\/\/\S+$/i.test(t)) {
       throw new Error(`"${path}" must be a full http(s) link, e.g. https://example.com/you`);
+    }
+    return t;
+  }
+  if (spec === 'time') {
+    if (typeof value !== 'string') throw new Error(`"${path}" must be a string.`);
+    const t = value.trim();
+    if (t) {
+      const mt = /^(\d{1,2}):(\d{2})$/.exec(t);
+      if (!mt) throw new Error(`"${path}" must be a 24-hour time like 20:30.`);
+      if (Number(mt[1]) > 24 || Number(mt[2]) > 59) {
+        throw new Error(`"${path}" must be a real time of day, e.g. 20:30.`);
+      }
     }
     return t;
   }
@@ -412,7 +448,9 @@ exports.handler = async (event) => {
     try {
       WORKER_EDITABLE_FIELDS.forEach(field => {
         if (Object.prototype.hasOwnProperty.call(updates, field)) {
-          applied[field] = validateField(field, updates[field]);
+          const v = validateField(field, updates[field]);
+          if (v === undefined) delete members[memberIdx][field]; // e.g. emptied availability
+          else applied[field] = v;
         }
       });
     } catch (e) {

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin — VirtualPlayToys</title>
-<link rel="stylesheet" href="assets/site.css" />
+<link rel="stylesheet" href="assets/site.css?v=7" />
 <style>
   .login-wrap{
     min-height:100vh;
@@ -358,8 +358,8 @@
   </div>
 </div>
 
-<script src="members-data.js"></script>
-<script src="assets/ui.js"></script>
+<script src="members-data.js?v=7"></script>
+<script src="assets/ui.js?v=7"></script>
 <script>
 (async () => {
   let MEMBERS = await loadMembers();
@@ -806,6 +806,13 @@
   function updateContentAvailHint(){
     const hint = document.getElementById('contentAvailHint');
     if(!hint || !contentAvailDraft) return;
+    // Guard against a stale cached ui.js (missing timezone helpers) so
+    // an outdated asset can never break opening/using this modal.
+    if(typeof convertAvailability !== 'function'){
+      hint.textContent = 'Availability preview unavailable — refresh the page (Ctrl+F5) to load the latest assets.';
+      hint.style.color = 'var(--warn)';
+      return;
+    }
     const converted = convertAvailability({
       timezone: contentAvailDraft.timezone.trim(),
       days: contentAvailDraft.days,
@@ -831,13 +838,14 @@
     updateContentAvailHint();
   });
   document.querySelectorAll('#contentAvailDays .day-chip').forEach(ch => {
-    ch.addEventListener('click', () => {
+    ch.addEventListener('click', e => {
+      e.preventDefault();
       if(!contentAvailDraft) return;
       const d = ch.dataset.day;
       contentAvailDraft.days = contentAvailDraft.days.includes(d)
         ? contentAvailDraft.days.filter(x => x !== d)
         : [...contentAvailDraft.days, d];
-      contentAvailDraft.days.sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b));
+      contentAvailDraft.days.sort((a, b) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(a) - ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(b));
       renderContentAvail();
     });
   });

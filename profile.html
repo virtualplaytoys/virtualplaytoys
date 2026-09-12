@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>VirtualPlayToys</title>
-<link rel="stylesheet" href="assets/site.css" />
+<link rel="stylesheet" href="assets/site.css?v=7" />
 <style>
   .top-nav{ max-width:1060px; margin:0 auto; padding:18px 4vw 0; }
   .top-nav a{ font-size:0.84rem; color:var(--text-faint); }
@@ -502,8 +502,8 @@
   </div>
 </div>
 
-<script src="members-data.js"></script>
-<script src="assets/ui.js"></script>
+<script src="members-data.js?v=7"></script>
+<script src="assets/ui.js?v=7"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   const id = Number(params.get('id'));
@@ -540,7 +540,7 @@
     const hasContact = contacts.length > 0;
     const links = (Array.isArray(m.links) ? m.links : []).filter(l => l.url);
     const hasSchedule = !!(m.schedule && m.schedule.trim());
-    const avail = (m.availability && convertAvailability(m.availability)) || null;
+    const avail = (m.availability && typeof convertAvailability === 'function' && convertAvailability(m.availability)) || null;
     const rates = m.rates || [];
     const services = m.services || {};
 
@@ -758,6 +758,11 @@
       start: availDraft.start,
       end: availDraft.end
     };
+    if(typeof convertAvailability !== 'function'){
+      hint.textContent = 'Availability preview unavailable — refresh the page (Ctrl+F5) to load the latest assets.';
+      hint.style.color = 'var(--warn)';
+      return;
+    }
     const converted = convertAvailability(clean);
     if(converted){
       hint.textContent = `Guests will see: ${fmtDayList(converted.days)} ${converted.start} – ${converted.end} (their local time)`;
@@ -1246,8 +1251,10 @@
       availDraft.days = availDraft.days.includes(d)
         ? availDraft.days.filter(x => x !== d)
         : [...availDraft.days, d];
-      // Keep editor order Sun→Sat regardless of click order.
-      availDraft.days.sort((a, b) => DAY_NAMES.indexOf(a) - DAY_NAMES.indexOf(b));
+      // Keep editor order Sun→Sat regardless of click order. Local list
+      // (not the ui.js one) so day picking can never break on a stale
+      // cached asset.
+      availDraft.days.sort((a, b) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(a) - ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(b));
       renderAvailDraft();
     });
   });
