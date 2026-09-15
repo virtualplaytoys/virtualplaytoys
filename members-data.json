@@ -132,7 +132,7 @@
   {
     "id": 12,
     "name": "laika",
-    "role": "escort",
+    "role": "performer",
     "bio": "Can be any female or femboy you might desire. Open to fullfill almost all sexual fantasies",
     "tags": [
       "furry",
@@ -143,22 +143,40 @@
       "dark",
       "bdsm"
     ],
-    "gender": "",
+    "gender": "any",
     "status": "unavailable",
     "contacts": [],
     "links": [],
     "verified": false,
     "featured": false,
     "image": "",
-    "schedule": "",
-    "rates": [],
+    "schedule": "Mon-Thu: 19:00 - 23:00\nFri: 19:00 to open end\nWeekends: Needs to be spoken about",
+    "rates": [
+      {
+        "id": 1,
+        "label": "1 hour dance and attention",
+        "amount": "20"
+      },
+      {
+        "id": 2,
+        "label": "Porn performance per hour",
+        "amount": "30"
+      }
+    ],
     "services": {
-      "offered": [],
-      "blocked": []
+      "offered": [
+        "private dance",
+        "custom",
+        "recording porn"
+      ],
+      "blocked": [
+        "scat",
+        "underage"
+      ]
     },
     "portfolio": [],
     "extraBio": [],
     "bottomSections": [],
-    "updatedAt": "2026-09-15T18:15:09.499Z"
+    "updatedAt": "2026-09-15T18:20:31.061Z"
   }
 ]
