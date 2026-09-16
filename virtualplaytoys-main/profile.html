@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VirtualPlayToys</title>
+<link rel="stylesheet" href="assets/site.css?v=10" />
+<style>
+  .top-nav{ max-width:1060px; margin:0 auto; padding:18px 4vw 0; }
+  .top-nav a{ font-size:0.84rem; color:var(--text-faint); }
+  .top-nav a:hover{ color:var(--text-dim); }
+
+  /* ---------- Hero ---------- */
+  .profile-hero{
+    max-width:1060px;
+    margin:14px auto 0;
+    width:calc(100% - 8vw);
+    padding:24px;
+    display:flex;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .profile-photo{
+    flex:0 0 280px;
+    max-width:280px;
+  }
+  .profile-photo img{
+    width:100%;
+    aspect-ratio:4/5;
+    object-fit:cover;
+    border-radius:var(--radius);
+    border:1px solid var(--border-2);
+    cursor:zoom-in;
+    display:block;
+  }
+  .profile-headline{ flex:1 1 340px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .profile-headline .top-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .profile-headline h1{ font-size:1.9rem; margin:0; }
+  .profile-role{ font-size:0.8rem; letter-spacing:0.06em; color:var(--accent); text-transform:uppercase; font-weight:700; margin:0; }
+  .profile-gender{ font-size:0.86rem; color:var(--text-dim); margin:0; }
+  .profile-bio{ font-size:0.95rem; line-height:1.65; color:var(--text-dim); margin:4px 0 0; max-width:62ch; }
+  .profile-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:4px; }
+  .profile-actions{ margin-top:auto; padding-top:10px; display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ---------- Section blocks ---------- */
+  .profile-main{
+    max-width:1060px;
+    margin:20px auto 0;
+    width:calc(100% - 8vw);
+    display:grid;
+    grid-template-columns:1.05fr 0.95fr;
+    gap:18px;
+    align-items:start;
+  }
+  @media (max-width:820px){
+    .profile-main{ grid-template-columns:1fr; }
+    .profile-photo{ flex:1 1 auto; max-width:none; }
+    .profile-photo img{ aspect-ratio:4/3; }
+  }
+  .rate-currency-hint{
+    font-size:0.66rem;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+  }
+  .col-title{
+    font-size:0.82rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  /* Accordion items (portfolio + bottom sections) */
+  .acc-item{ margin-bottom:11px; overflow:visible; }
+  .acc-header{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:13px 16px;
+    cursor:pointer; user-select:none;
+  }
+  .acc-header h3{ font-size:0.94rem; margin:0; }
+  .acc-header .caret{ font-size:0.75rem; color:var(--text-faint); transition:transform .16s ease; flex-shrink:0; }
+  .acc-item.open .caret{ transform:rotate(90deg); }
+  .acc-body{ display:none; padding:0 16px 15px; }
+  .acc-item.open .acc-body{ display:block; }
+  .acc-images{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));
+    gap:9px;
+  }
+  .acc-images img{
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    display:block;
+    cursor:zoom-in;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .acc-images img:hover{
+    border-color:var(--accent);
+    box-shadow:0 8px 22px rgba(0,0,0,0.45);
+  }
+  .empty-note{ color:var(--text-faint); font-size:0.85rem; padding:15px; margin:0; }
+
+  .bio-text{ font-size:0.94rem; line-height:1.7; color:var(--text-dim); margin:0 0 16px; }
+  .bio-block{ margin-bottom:11px; padding:14px 16px; }
+  .bio-block h3{ font-size:0.88rem; margin:0 0 6px; }
+  .bio-block p{ font-size:0.87rem; line-height:1.6; color:var(--text-dim); margin:0; white-space:pre-wrap; }
+
+  /* ---------- Rates ---------- */
+  .rates-section, .services-section, .schedule-section, .contact-section{
+    max-width:1060px;
+    margin:22px auto 0;
+    width:calc(100% - 8vw);
+  }
+  .rate-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(215px, 1fr));
+    gap:12px;
+  }
+  .rate-card{ padding:16px 18px; text-align:center; }
+  .rate-card .rate-amount{
+    font-size:1.35rem;
+    font-weight:800;
+    background:var(--accent-grad);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    display:inline-block;
+  }
+  .rate-card .rate-label{ font-size:0.84rem; color:var(--text-dim); margin-top:3px; }
+
+  /* ---------- Services ---------- */
+  .services-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:640px){ .services-grid{ grid-template-columns:1fr; } }
+  .service-col{ padding:16px 18px; }
+  .service-col h3{ font-size:0.86rem; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  .service-col h3 .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .service-col.yes h3 .dot{ background:var(--good); box-shadow:0 0 10px rgba(62,207,142,0.7); }
+  .service-col.no h3 .dot{ background:var(--bad); box-shadow:0 0 10px rgba(240,86,122,0.7); }
+  .service-col ul{ list-style:none; margin:0; padding:0; }
+  .service-col li{
+    font-size:0.87rem;
+    color:var(--text-dim);
+    padding:5px 0 5px 24px;
+    position:relative;
+    border-bottom:1px dashed var(--border);
+  }
+  .service-col li:last-child{ border-bottom:none; }
+  .service-col.yes li::before{ content:'✓'; position:absolute; left:2px; color:var(--good); font-weight:700; }
+  .service-col.no li::before{ content:'✕'; position:absolute; left:2px; color:var(--bad); font-weight:700; }
+
+  /* ---------- Schedule + contact ---------- */
+  .schedule-contact-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:640px){ .schedule-contact-grid{ grid-template-columns:1fr; } }
+  .schedule-box{ padding:16px 18px; }
+  .schedule-box h3, .contact-box h3{
+    font-size:0.86rem; margin:0 0 10px;
+    text-transform:uppercase; letter-spacing:0.07em; color:var(--text-faint);
+  }
+  .schedule-box pre{
+    margin:0;
+    font-family:var(--font);
+    font-size:0.88rem;
+    line-height:1.7;
+    color:var(--text-dim);
+    white-space:pre-wrap;
+  }
+  .contact-box{ padding:16px 18px; }
+  .contact-handle{
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--text);
+    margin:0 0 4px;
+    word-break:break-all;
+  }
+  .contact-row{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin:0 0 10px; }
+  .contact-row:last-of-type{ margin-bottom:0; }
+  .contact-row .contact-platform{ font-size:0.72rem; color:var(--accent); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; min-width:86px; margin:0; }
+  .contact-row .contact-username{ font-size:1.05rem; font-weight:700; color:var(--text); word-break:break-all; }
+  .contact-note{ font-size:0.78rem; color:var(--text-faint); margin:12px 0 0; line-height:1.55; }
+
+  /* ---------- Availability block (profile) ---------- */
+  .avail-block{ margin:0 0 14px; }
+  .schedule-box .avail-block:last-child{ margin-bottom:0; }
+  .avail-tz{
+    font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--accent); margin-bottom:6px;
+  }
+  .avail-when{ font-size:1.12rem; font-weight:700; color:var(--text); }
+  .avail-days{ margin-right:8px; }
+  .avail-time{ color:var(--accent); }
+  .avail-converted{ font-size:0.82rem; color:var(--text-dim); margin-top:5px; line-height:1.5; }
+  .avail-converted strong{ color:var(--text); }
+  .avail-note{ font-size:0.78rem; color:var(--text-faint); margin-top:7px; font-style:italic; }
+  .avail-live{ font-size:0.72rem; color:var(--text-faint); margin-top:9px; padding-top:8px; border-top:1px dashed var(--border); }
+  .avail-live-guest{ color:var(--good); font-weight:600; }
+
+  /* ---------- Hero external links ---------- */
+  .profile-links{ display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 4px; }
+  .profile-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.8rem;
+    font-weight:600;
+    color:var(--text-dim);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:5px 13px;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .profile-link:hover{ color:var(--text); border-color:var(--accent); }
+  .profile-link .pl-arrow{ font-size:0.72rem; color:var(--accent); }
+
+  .safety-strip{
+    max-width:1060px;
+    margin:24px auto 0;
+    width:calc(100% - 8vw);
+    padding:13px 18px;
+    font-size:0.8rem;
+    color:var(--text-dim);
+    background:rgba(242,193,78,0.07);
+    border:1px solid rgba(242,193,78,0.28);
+    border-radius:var(--radius-sm);
+  }
+  .safety-strip strong{ color:var(--gold); }
+
+  .not-found{
+    max-width:600px;
+    margin:70px auto;
+    padding:34px;
+    text-align:center;
+  }
+  .not-found p{ color:var(--text-dim); }
+
+  /* ---------- Worker editor modal ---------- */
+  .worker-modal-box{ max-width:560px; }
+  .worker-modal-body{ max-height:68vh; overflow-y:auto; padding-right:6px; }
+  .wcm-section{ margin:18px 0 6px; }
+  .wcm-section-title{
+    font-size:0.74rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--text-faint);
+    margin:0 0 9px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .image-preview{
+    width:86px; height:86px;
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    object-fit:cover;
+    display:block;
+    margin-top:9px;
+  }
+  /* ---------- Availability editor ---------- */
+  .day-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .day-chip{
+    font:inherit; font-size:0.8rem; font-weight:600;
+    padding:5px 11px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .day-chip:hover{ border-color:var(--accent); color:var(--text); }
+  .day-chip.on{
+    background:var(--accent-soft);
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .avail-times{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .avail-hint{ font-size:0.78rem; color:var(--good); margin:2px 0 8px; min-height:1em; }
+  .field-hint{ font-size:0.75rem; color:var(--text-faint); margin:0; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <a href="directory.html">&laquo; Back to the directory</a>
+</div>
+
+<div id="pageContent"></div>
+
+<footer class="site-footer">
+  <div class="footer-links">
+    <a class="footer-link-btn" href="directory.html">Directory</a>
+    <a class="footer-link-btn" href="admin.html">Admin Login</a>
+  </div>
+  <p>© VirtualPlayToys · 18+ only</p>
+</footer>
+
+<!-- ---------------- Worker login + full self-edit ---------------- -->
+<div class="modal-overlay" id="workerEditOverlay">
+  <div class="box modal-box worker-modal-box">
+
+    <div id="workerLoginStep">
+      <h2>Worker login</h2>
+      <p style="font-size:0.85rem; color:var(--text-dim); margin:0 0 14px;">
+        Enter the 6-digit code from your authenticator app. Your login is
+        remembered on this device, so you'll stay logged in on your next visit.
+      </p>
+      <div class="field">
+        <label for="workerCodeInput">Code</label>
+        <input type="text" id="workerCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+               autocomplete="one-time-code" placeholder="123456" />
+      </div>
+      <div class="field-error" id="workerLoginError"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="workerLoginCancelBtn">Cancel</button>
+        <button type="button" class="btn primary" id="workerLoginSubmitBtn">Log in</button>
+      </div>
+    </div>
+
+    <div id="workerEditFormStep" style="display:none;">
+      <h2 style="margin-bottom:4px;">Edit your profile</h2>
+      <p style="font-size:0.78rem; color:var(--text-faint); margin:0 0 12px;">
+        Full control over your listing — everything saves to the live site when you click Save.
+      </p>
+
+      <div class="worker-modal-body">
+        <div class="field">
+          <label for="workerEditName">Name</label>
+          <input type="text" id="workerEditName" />
+        </div>
+
+        <div class="field">
+          <label for="workerEditImage">Profile photo</label>
+          <input type="file" id="workerEditImage" accept="image/*" />
+          <input type="url" id="workerEditImageLink" placeholder="…or paste an image link (https://pbs.twimg.com/…)" />
+          <img id="workerEditImagePreview" class="image-preview" style="display:none;" />
+        </div>
+
+        <div class="field">
+          <label for="workerEditRole">Role / title</label>
+          <input type="text" id="workerEditRole" />
+        </div>
+
+        <div class="field">
+          <label for="workerEditGender">Gender</label>
+          <input type="text" id="workerEditGender" placeholder="e.g. She/her, He/him, They/them" />
+        </div>
+
+        <div class="field">
+          <label for="workerEditStatus">Availability</label>
+          <select id="workerEditStatus">
+            <option value="available">Available</option>
+            <option value="unavailable">Not available</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="workerEditBio">Bio</label>
+          <textarea id="workerEditBio"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="workerEditTags">Tags (comma-separated)</label>
+          <input type="text" id="workerEditTags" />
+        </div>
+
+        <!-- ---- Contacts (multi-platform) ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Contacts — one per platform</p>
+          <div id="wcmContactsList"></div>
+          <button type="button" class="btn small" id="wcmAddContactBtn">+ Add platform</button>
+        </div>
+
+        <!-- ---- Links ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Links (optional — shown on your profile)</p>
+          <div id="wcmLinksList"></div>
+          <button type="button" class="btn small" id="wcmAddLinkBtn">+ Add link</button>
+        </div>
+
+        <!-- ---- Schedule ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Availability (your timezone)</p>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="wcmAvailTz">Your timezone</label>
+            <input type="text" id="wcmAvailTz" list="timezoneOptions" placeholder="e.g. Pacific/Auckland" autocomplete="off" />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label>Days you're usually online</label>
+            <div class="day-chips" id="wcmAvailDays">
+              <button type="button" class="day-chip" data-day="Sun">Sun</button>
+              <button type="button" class="day-chip" data-day="Mon">Mon</button>
+              <button type="button" class="day-chip" data-day="Tue">Tue</button>
+              <button type="button" class="day-chip" data-day="Wed">Wed</button>
+              <button type="button" class="day-chip" data-day="Thu">Thu</button>
+              <button type="button" class="day-chip" data-day="Fri">Fri</button>
+              <button type="button" class="day-chip" data-day="Sat">Sat</button>
+            </div>
+          </div>
+          <div class="avail-times">
+            <div class="field">
+              <label for="wcmAvailStart">Usually online from</label>
+              <input type="time" id="wcmAvailStart" />
+            </div>
+            <div class="field">
+              <label for="wcmAvailEnd">Until</label>
+              <input type="time" id="wcmAvailEnd" />
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="wcmAvailNote">Note (optional)</label>
+            <input type="text" id="wcmAvailNote" placeholder="e.g. usually on later on Fridays" />
+          </div>
+          <p class="avail-hint" id="wcmAvailHint"></p>
+          <p class="field-hint">Guests see this converted to <strong>their</strong> timezone automatically — enter it once in your time. The old free-text schedule box is still there below if you'd rather write it yourself.</p>
+        </div>
+
+        <!-- ---- Schedule (free text) ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Availability schedule (free text, optional)</p>
+          <div class="field" style="margin-bottom:0;">
+            <textarea id="workerEditSchedule" placeholder="e.g. Mon–Fri: 6pm–11pm EST&#10;Weekends: usually online, message first"></textarea>
+          </div>
+        </div>
+
+        <!-- ---- Rates ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">
+            Session rates
+            <button type="button" class="btn small" id="wcmAddRateBtn">+ Add rate</button>
+          </p>
+          <div id="wcmRatesList"></div>
+        </div>
+
+        <!-- ---- Services ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">Services</p>
+          <div class="field">
+            <label for="workerEditServicesYes">I offer (one per line)</label>
+            <textarea id="workerEditServicesYes" placeholder="Escort dates&#10;Private dances&#10;Custom content"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="workerEditServicesNo">I will NOT do (one per line)</label>
+            <textarea id="workerEditServicesNo" placeholder="Anything off-platform&#10;IRL meetups"></textarea>
+          </div>
+        </div>
+
+        <!-- ---- Content manager ---- -->
+        <div class="wcm-section">
+          <p class="wcm-section-title">
+            Portfolio (left side of this page)
+            <button type="button" class="btn small" id="wcmAddPortfolioBtn">+ Add project</button>
+          </p>
+          <div id="wcmPortfolioList"></div>
+        </div>
+
+        <div class="wcm-section">
+          <p class="wcm-section-title">
+            Extra bio blocks (under the bio)
+            <button type="button" class="btn small" id="wcmAddBioBtn">+ Add block</button>
+          </p>
+          <div id="wcmExtraBioList"></div>
+        </div>
+
+        <div class="wcm-section">
+          <p class="wcm-section-title">
+            Bottom sections (full-width, below everything)
+            <button type="button" class="btn small" id="wcmAddBottomBtn">+ Add section</button>
+          </p>
+          <div id="wcmBottomList"></div>
+        </div>
+      </div>
+
+      <div class="field-error" id="workerSaveError"></div>
+      <div class="field-success" id="workerSaveSuccess"></div>
+
+      <div style="display:flex; justify-content:space-between; gap:8px; margin-top:10px;">
+        <button type="button" class="btn danger" id="workerLogoutBtn">Log out</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn ghost" id="workerCancelEditBtn">Cancel</button>
+          <button type="button" class="btn primary" id="workerSaveBtn">Save changes</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="members-data.js?v=10"></script>
+<script src="assets/ui.js?v=10"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id'));
+  const content = document.getElementById('pageContent');
+
+  (async () => {
+    const MEMBERS = await loadMembers();
+    const member = MEMBERS.find(m => m.id === id);
+
+    if(!member){
+      content.innerHTML = `
+        <div class="not-found box">
+          <h1>Profile not found</h1>
+          <p>This profile doesn't exist, or the link is missing an id. <a href="directory.html">Back to the directory &raquo;</a></p>
+        </div>`;
+    }else{
+      currentMember = member;
+      renderProfile(member);
+      checkStoredSession();
+    }
+  })();
+
+  // =====================================================================
+  // PUBLIC RENDERING — everything user-entered goes through escapeHtml.
+  // =====================================================================
+  function renderProfile(m){
+    document.title = `${m.name} — VirtualPlayToys`;
+
+    const verified = m.verified ? '<span class="verified-badge">✓ Verified</span>' : '';
+    const pill = `<span class="status-pill ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>`;
+    const tags = (m.tags || []).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
+    const photo = m.image || placeholderImg(0, m.name.split(' ')[0], 500, 625);
+    const photoSrc = safeImageSrc(photo);
+    const contacts = Array.isArray(m.contacts) ? m.contacts.filter(c => c.platform || c.username) : [];
+    const hasContact = contacts.length > 0;
+    const links = (Array.isArray(m.links) ? m.links : []).filter(l => l.url);
+    const hasSchedule = !!(m.schedule && m.schedule.trim());
+    const avail = (m.availability && typeof convertAvailability === 'function' && convertAvailability(m.availability)) || null;
+    const rates = m.rates || [];
+    const services = m.services || {};
+
+    content.innerHTML = `
+      <div class="profile-hero box">
+        <div class="profile-photo" data-lightbox>
+          <img src="${photoSrc}" alt="${escapeHtml(m.name)}" data-lightbox-src="${photoSrc}" />
+        </div>
+        <div class="profile-headline">
+          <div class="top-row">
+            <h1>${escapeHtml(m.name)}</h1>
+            ${verified}
+            ${pill}
+          </div>
+          <p class="profile-role">${escapeHtml(m.role)}</p>
+          ${m.gender ? `<p class="profile-gender">${escapeHtml(m.gender)}</p>` : ''}
+          <p class="profile-bio">${escapeHtml(m.bio)}</p>
+          ${(m.tags || []).length ? `<div class="profile-tags">${tags}</div>` : ''}
+          ${links.length ? `<div class="profile-links">${links.map(l => `<a class="profile-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer nofollow"><span class="pl-arrow">↗</span>${escapeHtml(l.label || l.url)}</a>`).join('')}</div>` : ''}
+          <div class="profile-actions">
+            ${hasContact ? `<a class="btn primary" href="#contact-section">Contact info ↓</a>` : ''}
+            <button class="btn ghost" id="editOwnProfileBtn" style="display:none;">Edit my profile</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-main">
+        <div>
+          <p class="col-title">Portfolio</p>
+          ${renderPortfolio(m.portfolio)}
+        </div>
+        <div>
+          <p class="col-title">About</p>
+          <p class="bio-text">${escapeHtml(m.bio)}</p>
+          ${renderExtraBio(m.extraBio)}
+        </div>
+      </div>
+
+      ${rates.length ? `
+      <div class="rates-section">
+        <p class="col-title">Sessions &amp; rates <span class="rate-currency-hint">(in performer's local currency)</span></p>
+        <div class="rate-cards">
+          ${rates.map(r => `
+            <div class="box-2 rate-card">
+              <div class="rate-amount">${escapeHtml(r.amount)}</div>
+              <div class="rate-label">${escapeHtml(r.label)}</div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${((services.offered || []).length || (services.blocked || []).length) ? `
+      <div class="services-section">
+        <p class="col-title">Services</p>
+        <div class="services-grid">
+          <div class="box-2 service-col yes">
+            <h3><span class="dot"></span>I offer</h3>
+            <ul>${(services.offered || []).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li><em>Ask me — I\'m flexible.</em></li>'}</ul>
+          </div>
+          <div class="box-2 service-col no">
+            <h3><span class="dot"></span>I will NOT do</h3>
+            <ul>${(services.blocked || []).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li><em>Nothing explicitly excluded — ask first.</em></li>'}</ul>
+          </div>
+        </div>
+      </div>` : ''}
+
+      ${(avail || hasSchedule || hasContact) ? `
+      <div class="schedule-section">
+        <p class="col-title">Availability &amp; booking</p>
+        <div class="schedule-contact-grid">
+          <div class="box-2 schedule-box">
+            ${avail ? `
+            <div class="avail-block">
+              <div class="avail-tz">${escapeHtml(timezoneLabel(m.availability.timezone))}</div>
+              <div class="avail-when">
+                <span class="avail-days">${escapeHtml(fmtDayList(avail.workerDays))}</span>
+                ${avail.workerStart === avail.workerEnd ? `<span class="avail-time">from ${escapeHtml(avail.workerStart)}</span>` : `<span class="avail-time">${escapeHtml(avail.workerStart)} – ${escapeHtml(avail.workerEnd)}</span>`}
+              </div>
+              <div class="avail-converted">
+                = <strong>${escapeHtml(timezoneLabel(avail.tz))}</strong> (your time): ${escapeHtml(fmtDayList(avail.days))} ${escapeHtml(avail.start)} – ${escapeHtml(avail.end)}
+              </div>
+              ${m.availability.note ? `<div class="avail-note">${escapeHtml(m.availability.note)}</div>` : ''}
+              <div class="avail-live">It's ${escapeHtml(timeInZone(m.availability.timezone))} there right now — <span class="avail-live-guest">${escapeHtml(fmtHm(new Date().getHours() * 60 + new Date().getMinutes()))} for you</span></div>
+            </div>` : ''}
+            ${hasSchedule ? `
+            <h3>Online times</h3>
+            <pre>${escapeHtml(m.schedule)}</pre>` : ''}
+          </div>
+          ${hasContact ? `
+          <div class="box-2 contact-box" id="contact-section">
+            <h3>Contact</h3>
+            ${contacts.map(c => `
+              <div class="contact-row">
+                <span class="contact-platform">${escapeHtml(c.platform || 'Contact')}</span>
+                <span class="contact-username">${escapeHtml(c.username)}</span>
+              </div>`).join('')}
+            <p class="contact-note">Contact and payment happen directly with the performer on whatever message platform you both prefer — Discord, WhatsApp, Telegram, in VR — this site is advertising only and takes no cut. Follow the 18+ rules of whatever platform you use, and note a performer may still ask to see ID themselves if they don't trust a badge alone (see below).</p>
+          </div>` : ''}
+        </div>
+      </div>` : ''}
+
+      <div class="safety-strip">
+        <strong>Direct &amp; independent:</strong> this site is advertising only. Sessions are arranged and paid
+        directly with the performer, using their preferred payment method and their local currency —
+        the site takes no cut. All performers listed here are manually verified (photo ID + live selfie match),
+        and every performer can end a session and report a client at their own discretion.
+        <strong>A performer can also ask to see your ID themselves</strong> if they don't trust an 18+ badge alone —
+        with ever-growing rumors of kids beating age verification, that judgment call is theirs to make,
+        and it's safest to just cooperate.
+      </div>
+
+      ${(m.bottomSections || []).length ? `
+      <div class="rates-section">
+        <p class="col-title">More about ${escapeHtml(m.name.split(' ')[0])}</p>
+        ${renderBottomSections(m.bottomSections)}
+      </div>` : ''}
+    `;
+
+    content.querySelectorAll('[data-toggle]').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('[data-portfolio-item], [data-bottom-item]').classList.toggle('open');
+      });
+    });
+    wireLightboxes(content);
+  }
+
+  function renderPortfolio(portfolio){
+    if(!portfolio || portfolio.length === 0){
+      return `<div class="empty-note box">No portfolio pieces added yet.</div>`;
+    }
+    const forceOpen = portfolio.length <= 2;
+    return portfolio.map((p, i) => {
+      const openClass = (forceOpen || i === 0) ? ' open' : '';
+      const images = (p.images && p.images.length)
+        ? p.images.map((src, idx) => { const u = safeImageSrc(src); return `<img src="${u}" alt="${escapeHtml(p.title)} image ${idx + 1}" loading="lazy" data-lightbox-src="${u}" />`; }).join('')
+        : `<img src="${placeholderImg(i, p.title, 320, 240)}" alt="${escapeHtml(p.title)} placeholder" loading="lazy" />`;
+
+      return `
+        <div class="acc-item box${openClass}" data-portfolio-item>
+          <div class="acc-header" data-toggle>
+            <h3>${escapeHtml(p.title)}</h3>
+            <span class="caret">&#9656;</span>
+          </div>
+          <div class="acc-body">
+            <div class="acc-images" data-lightbox>${images}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderExtraBio(extraBio){
+    if(!extraBio || extraBio.length === 0) return '';
+    return extraBio.map(b => `
+      <div class="bio-block box">
+        <h3>${escapeHtml(b.title)}</h3>
+        <p>${escapeHtml(b.text)}</p>
+      </div>`).join('');
+  }
+
+  function renderBottomSections(sections){
+    return sections.map(s => `
+      <div class="acc-item box" data-bottom-item>
+        <div class="acc-header" data-toggle>
+          <h3>${escapeHtml(s.title)}</h3>
+          <span class="caret">&#9656;</span>
+        </div>
+        <div class="acc-body" data-lightbox>
+          ${s.image ? (() => { const u = safeImageSrc(s.image); return `<img src="${u}" alt="${escapeHtml(s.title)}" style="max-width:240px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px; cursor:zoom-in;" data-lightbox-src="${u}" />`; })() : ''}
+          ${s.text ? `<p style="font-size:0.87rem; color:var(--text-dim); margin:0; white-space:pre-wrap;">${escapeHtml(s.text)}</p>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  // =====================================================================
+  // WORKER LOGIN + FULL SELF-EDIT. The edit button only exists for the
+  // profile's owner: it stays hidden until a valid session token
+  // (stored by the Worker Login footer link on directory.html) is
+  // verified to belong to THIS profile. The server re-checks the token
+  // on every save regardless — the hidden button is UX, not the gate.
+  // =====================================================================
+  const SESSION_STORAGE_KEY = 'prism_worker_session';
+  let sessionToken = null;
+  let currentMember = null;
+  let sessionVerifiedForId = null;
+  let wcmDraft = null;
+  // Availability editor state (kept separate from wcmDraft — it's plain
+  // inputs, not a rendered list): { timezone, days:[], start, end, note }
+  let availDraft = null;
+
+  function renderAvailDraft(){
+    if(!availDraft) return;
+    let dl = document.getElementById('timezoneOptions');
+    if(!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'timezoneOptions';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = (typeof COMMON_TIMEZONES !== 'undefined' ? COMMON_TIMEZONES : []).map(z => `<option value="${z}">`).join('');
+    document.getElementById('wcmAvailTz').value = availDraft.timezone || '';
+    document.querySelectorAll('#wcmAvailDays .day-chip').forEach(ch => {
+      ch.classList.toggle('on', availDraft.days.includes(ch.dataset.day));
+    });
+    document.getElementById('wcmAvailStart').value = availDraft.start || '';
+    document.getElementById('wcmAvailEnd').value = availDraft.end || '';
+    document.getElementById('wcmAvailNote').value = availDraft.note || '';
+    updateAvailHint();
+  }
+
+  // Live feedback: shows what guests will see, or why the block won't save.
+  function updateAvailHint(){
+    const hint = document.getElementById('wcmAvailHint');
+    if(!hint || !availDraft) return;
+    const clean = {
+      timezone: availDraft.timezone.trim(),
+      days: availDraft.days,
+      start: availDraft.start,
+      end: availDraft.end
+    };
+    if(typeof convertAvailability !== 'function'){
+      hint.textContent = 'Availability preview unavailable — refresh the page (Ctrl+F5) to load the latest assets.';
+      hint.style.color = 'var(--warn)';
+      return;
+    }
+    const converted = convertAvailability(clean);
+    if(converted){
+      hint.textContent = `Guests will see: ${fmtDayList(converted.days)} ${converted.start} – ${converted.end} (their local time)`;
+      hint.style.color = 'var(--good)';
+    }else{
+      const missing = [];
+      if(!isValidTimeZone(clean.timezone)) missing.push('a valid timezone');
+      if(!clean.days.length) missing.push('at least one day');
+      if(!clean.start) missing.push('a start time');
+      hint.textContent = missing.length ? `Pick ${missing.join(' and ')} to show your hours to guests.` : '';
+      hint.style.color = 'var(--warn)';
+    }
+  }
+  let pendingImageDataUrl = null;
+
+  function updateEditButtonVisibility(){
+    const btn = document.getElementById('editOwnProfileBtn');
+    if(!btn) return;
+    const isOwner = !!(sessionToken && currentMember && sessionVerifiedForId === currentMember.id);
+    btn.style.display = isOwner ? 'inline-block' : 'none';
+  }
+
+  function loadStoredSession(){
+    try{ return JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || 'null'); }
+    catch(e){ return null; }
+  }
+  function storeSession(tok){
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ token: tok }));
+  }
+  function clearStoredSession(){
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  }
+
+  async function verifyToken(token){
+    if(!token) return { ok: false, body: { error: 'No session.' } };
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      const body = await res.json();
+      return { ok: res.ok, body };
+    }catch(e){
+      return { ok: false, body: { error: e.message } };
+    }
+  }
+
+  async function checkStoredSession(){
+    const stored = loadStoredSession();
+    if(!stored || !stored.token) return;
+
+    const result = await verifyToken(stored.token);
+    if(result.ok && result.body.memberId === currentMember.id){
+      sessionToken = stored.token;
+      if(result.body.token){
+        sessionToken = result.body.token;
+        storeSession(sessionToken);
+      }
+      sessionVerifiedForId = currentMember.id;
+    }else if(!result.ok){
+      clearStoredSession();
+    }
+    updateEditButtonVisibility();
+  }
+
+  function populateEditForm(body){
+    const c = body.current;
+    document.getElementById('workerEditName').value = c.name || '';
+    document.getElementById('workerEditRole').value = c.role || '';
+    document.getElementById('workerEditGender').value = c.gender || '';
+    document.getElementById('workerEditStatus').value = c.status || 'available';
+    document.getElementById('workerEditBio').value = c.bio || '';
+    document.getElementById('workerEditTags').value = (c.tags || []).join(', ');
+    document.getElementById('workerEditSchedule').value = c.schedule || '';
+    availDraft = {
+      timezone: (c.availability && c.availability.timezone) || '',
+      days: Array.isArray(c.availability && c.availability.days) ? [...c.availability.days] : [],
+      start: (c.availability && c.availability.start) || '',
+      end: (c.availability && c.availability.end) || '',
+      note: (c.availability && c.availability.note) || ''
+    };
+    renderAvailDraft();
+    document.getElementById('workerEditServicesYes').value = ((c.services && c.services.offered) || []).join('\n');
+    document.getElementById('workerEditServicesNo').value = ((c.services && c.services.blocked) || []).join('\n');
+    const preview = document.getElementById('workerEditImagePreview');
+    if(c.image){
+      preview.src = c.image;
+      preview.style.display = 'block';
+    }else{
+      preview.style.display = 'none';
+    }
+    pendingImageDataUrl = null;
+    wcmDraft = {
+      rates: JSON.parse(JSON.stringify(c.rates || [])),
+      portfolio: JSON.parse(JSON.stringify(c.portfolio || [])),
+      extraBio: JSON.parse(JSON.stringify(c.extraBio || [])),
+      bottomSections: JSON.parse(JSON.stringify(c.bottomSections || [])),
+      // contacts/links have no ids in the data file (the server strips
+      // to {platform, username} / {label, url}), so assign row ids here
+      // — the draft bindings key off them.
+      contacts: (c.contacts || []).map((x, i) => ({ ...x, id: i + 1 })),
+      links: (c.links || []).map((x, i) => ({ ...x, id: i + 1 }))
+    };
+    renderWcmLists();
+  }
+
+  function showLoginStep(){
+    document.getElementById('workerLoginStep').style.display = 'block';
+    document.getElementById('workerEditFormStep').style.display = 'none';
+    document.getElementById('workerCodeInput').value = '';
+    document.getElementById('workerLoginError').textContent = '';
+  }
+
+  function showEditStep(body){
+    document.getElementById('workerLoginStep').style.display = 'none';
+    document.getElementById('workerEditFormStep').style.display = 'block';
+    document.getElementById('workerSaveError').textContent = '';
+    document.getElementById('workerSaveSuccess').textContent = '';
+    populateEditForm(body);
+  }
+
+  document.body.addEventListener('click', async e => {
+    if(e.target && e.target.id === 'editOwnProfileBtn'){
+      document.getElementById('workerEditOverlay').classList.add('open');
+
+      if(sessionToken){
+        const result = await verifyToken(sessionToken);
+        if(result.ok){
+          if(result.body.token){
+            sessionToken = result.body.token;
+            storeSession(sessionToken);
+          }
+          sessionVerifiedForId = currentMember.id;
+          showEditStep(result.body);
+          return;
+        }
+        sessionToken = null;
+        sessionVerifiedForId = null;
+        clearStoredSession();
+        updateEditButtonVisibility();
+      }
+      showLoginStep();
+    }
+  });
+
+  document.getElementById('workerLoginCancelBtn').addEventListener('click', () => {
+    document.getElementById('workerEditOverlay').classList.remove('open');
+  });
+
+  document.getElementById('workerCancelEditBtn').addEventListener('click', () => {
+    document.getElementById('workerEditOverlay').classList.remove('open');
+  });
+
+  document.getElementById('workerLoginSubmitBtn').addEventListener('click', async () => {
+    const code = document.getElementById('workerCodeInput').value.trim();
+    const errEl = document.getElementById('workerLoginError');
+    if(!code){ errEl.textContent = 'Enter your code.'; return; }
+
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const body = await res.json();
+
+      if(!res.ok){ errEl.textContent = body.error || 'Login failed.'; return; }
+
+      if(body.memberId !== currentMember.id){
+        errEl.textContent = `That login belongs to ${body.name}, not ${currentMember.name}. You can only edit your own profile.`;
+        return;
+      }
+
+      sessionToken = body.token;
+      storeSession(body.token);
+      sessionVerifiedForId = currentMember.id;
+      updateEditButtonVisibility();
+      showEditStep(body);
+    }catch(e){
+      errEl.textContent = `Network error: ${e.message}`;
+    }
+  });
+
+  document.getElementById('workerLogoutBtn').addEventListener('click', () => {
+    clearStoredSession();
+    sessionToken = null;
+    sessionVerifiedForId = null;
+    updateEditButtonVisibility();
+    document.getElementById('workerEditOverlay').classList.remove('open');
+    showToast('Logged out.', 'ok');
+  });
+
+  document.getElementById('workerEditImage').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    pendingImageDataUrl = await resizeImageFile(file, 800, 0.82, 200 * 1024);
+    document.getElementById('workerEditImageLink').value = ''; // upload wins — show it
+    const preview = document.getElementById('workerEditImagePreview');
+    preview.src = pendingImageDataUrl;
+    preview.style.display = 'block';
+  });
+
+  // Paste-a-link alternative to uploading — zero bytes added to the
+  // site's data file. Last action (upload vs link) wins.
+  document.getElementById('workerEditImageLink').addEventListener('input', e => {
+    const url = e.target.value.trim();
+    pendingImageDataUrl = url || null;
+    const preview = document.getElementById('workerEditImagePreview');
+    if(url){ preview.src = safeImageSrc(url); preview.style.display = 'block'; }
+    else preview.style.display = 'none';
+  });
+
+  // ---------------- Content manager (rates / portfolio / bio / bottom) ----------------
+  function nextWcmId(list){
+    return list.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+  }
+
+  function renderWcmLists(){
+    if(!wcmDraft) return;
+
+    const PLATFORMS = ['VRChat','Chillout','Neos','SecondLife','Discord','WhatsApp','Telegram','Twitter / X','Bluesky'];
+
+    document.getElementById('wcmContactsList').innerHTML = wcmDraft.contacts.length
+      ? wcmDraft.contacts.map(c => `
+        <div class="cm-row">
+          <div class="cm-row-top">
+            <div class="cm-fields">
+              <input type="text" list="platformOptions" value="${escapeHtml(c.platform)}" data-wcm-contact-platform data-id="${c.id}" placeholder="Platform, e.g. Discord, SecondLife" />
+              <input type="text" value="${escapeHtml(c.username)}" data-wcm-contact-username data-id="${c.id}" placeholder="Your username there" />
+            </div>
+            <button type="button" class="cm-remove" data-wcm-remove-contact data-id="${c.id}" title="Remove contact">✕</button>
+          </div>
+        </div>`).join('')
+      : `<p class="cm-empty">No contacts yet — add one per platform so people know where to find you.</p>`;
+
+    document.getElementById('wcmLinksList').innerHTML = wcmDraft.links.length
+      ? wcmDraft.links.map(l => `
+        <div class="cm-row">
+          <div class="cm-row-top">
+            <div class="cm-fields">
+              <input type="text" list="linkLabelOptions" value="${escapeHtml(l.label)}" data-wcm-link-label data-id="${l.id}" placeholder="Label, e.g. Twitter, OnlyFans" />
+              <input type="url" value="${escapeHtml(l.url)}" data-wcm-link-url data-id="${l.id}" placeholder="https://… full link" />
+            </div>
+            <button type="button" class="cm-remove" data-wcm-remove-link data-id="${l.id}" title="Remove link">✕</button>
+          </div>
+        </div>`).join('')
+      : `<p class="cm-empty">No links yet — optional.</p>`;
+
+    // Shared datalists (re-created each render since innerHTML wipes them)
+    let dl = document.getElementById('platformOptions');
+    if(!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'platformOptions';
+      document.body.appendChild(dl);
+      const dl2 = document.createElement('datalist');
+      dl2.id = 'linkLabelOptions';
+      dl2.innerHTML = ['Twitter / X','OnlyFans','Fansly','Bluesky','Reddit','Twitch','Linktree','Other'].map(o => `<option value="${o}">`).join('');
+      document.body.appendChild(dl2);
+    }
+    dl.innerHTML = PLATFORMS.map(o => `<option value="${o}">`).join('');
+
+    document.getElementById('wcmRatesList').innerHTML = wcmDraft.rates.length
+      ? wcmDraft.rates.map(r => `
+        <div class="cm-row">
+          <div class="cm-row-top">
+            <div class="cm-fields">
+              <input type="text" value="${escapeHtml(r.label)}" data-wcm-rate-label data-id="${r.id}" placeholder="e.g. 30 min private dance" />
+              <input type="text" value="${escapeHtml(r.amount)}" data-wcm-rate-amount data-id="${r.id}" placeholder="e.g. 80 NZD (your local currency)" />
+            </div>
+            <button type="button" class="cm-remove" data-wcm-remove-rate data-id="${r.id}" title="Remove rate">✕</button>
+          </div>
+        </div>`).join('')
+      : `<p class="cm-empty">No rates yet.</p>`;
+
+    document.getElementById('wcmPortfolioList').innerHTML = wcmDraft.portfolio.length
+      ? wcmDraft.portfolio.map(p => {
+          const images = (p.images || []).map((src, idx) => `
+            <div class="cm-thumb">
+              <img src="${safeImageSrc(src)}" alt="" data-lightbox-src="${safeImageSrc(src)}" />
+              <button type="button" data-wcm-remove-image data-pid="${p.id}" data-idx="${idx}">✕</button>
+            </div>`).join('');
+          return `
+            <div class="cm-row">
+              <div class="cm-row-top">
+                <div class="cm-fields">
+                  <input type="text" value="${escapeHtml(p.title)}" data-wcm-portfolio-title data-id="${p.id}" placeholder="Project title" />
+                  <div class="cm-images" data-lightbox>${images}</div>
+                  <div class="cm-add-image">
+                    <label>+ Add image(s)
+                      <input type="file" accept="image/*" multiple data-wcm-add-image data-id="${p.id}" />
+                    </label>
+                    <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-wcm-image-link data-id="${p.id}" />
+                  </div>
+                </div>
+                <button type="button" class="cm-remove" data-wcm-remove-portfolio data-id="${p.id}" title="Remove project">✕</button>
+              </div>
+            </div>`;
+        }).join('')
+      : `<p class="cm-empty">No projects yet.</p>`;
+
+    document.getElementById('wcmExtraBioList').innerHTML = wcmDraft.extraBio.length
+      ? wcmDraft.extraBio.map(b => `
+        <div class="cm-row">
+          <div class="cm-row-top">
+            <div class="cm-fields">
+              <input type="text" value="${escapeHtml(b.title)}" data-wcm-bio-title data-id="${b.id}" placeholder="Block title" />
+              <textarea data-wcm-bio-text data-id="${b.id}" placeholder="Text">${escapeHtml(b.text)}</textarea>
+            </div>
+            <button type="button" class="cm-remove" data-wcm-remove-bio data-id="${b.id}" title="Remove block">✕</button>
+          </div>
+        </div>`).join('')
+      : `<p class="cm-empty">No extra bio blocks yet.</p>`;
+
+    document.getElementById('wcmBottomList').innerHTML = wcmDraft.bottomSections.length
+      ? wcmDraft.bottomSections.map(s => {
+          const imageHtml = s.image
+            ? `<div class="cm-thumb"><img src="${s.image}" alt="" data-lightbox-src="${s.image}" /><button type="button" data-wcm-remove-bottom-image data-id="${s.id}">✕</button></div>`
+            : `<div class="cm-add-image"><label>+ Add image
+                <input type="file" accept="image/*" data-wcm-add-bottom-image data-id="${s.id}" />
+              </label>
+              <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-wcm-bottom-image-link data-id="${s.id}" />
+            </div>`;
+          return `
+            <div class="cm-row">
+              <div class="cm-row-top">
+                <div class="cm-fields">
+                  <input type="text" value="${escapeHtml(s.title)}" data-wcm-bottom-title data-id="${s.id}" placeholder="Section title" />
+                  <textarea data-wcm-bottom-text data-id="${s.id}" placeholder="Text (optional)">${escapeHtml(s.text || '')}</textarea>
+                  <div class="cm-images" data-lightbox>${imageHtml}</div>
+                </div>
+                <button type="button" class="cm-remove" data-wcm-remove-bottom data-id="${s.id}" title="Remove section">✕</button>
+              </div>
+            </div>`;
+        }).join('')
+      : `<p class="cm-empty">No bottom sections yet.</p>`;
+
+    wireWcmEvents();
+    wireLightboxes(document.getElementById('workerEditOverlay'));
+  }
+
+  function wireWcmEvents(){
+    // Rates
+    document.querySelectorAll('[data-wcm-rate-label]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.rates.find(r => r.id === Number(input.dataset.id));
+        if(item) item.label = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-rate-amount]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.rates.find(r => r.id === Number(input.dataset.id));
+        if(item) item.amount = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-rate]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.rates = wcmDraft.rates.filter(r => r.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+
+    // Portfolio
+    document.querySelectorAll('[data-wcm-portfolio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-portfolio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.portfolio = wcmDraft.portfolio.filter(p => p.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = wcmDraft.portfolio.find(p => p.id === Number(btn.dataset.pid));
+        if(item) item.images.splice(Number(btn.dataset.idx), 1);
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-add-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        if(!item) return;
+        const files = [...e.target.files];
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85, 260 * 1024)));
+        item.images.push(...dataUrls);
+        const linkInput = input.closest('.cm-add-image')?.querySelector('[data-wcm-image-link]');
+        if(linkInput) linkInput.value = '';
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-image-link]').forEach(input => {
+      input.addEventListener('keydown', e => {
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.images.push(url);
+        input.value = '';
+        renderWcmLists();
+      });
+      input.addEventListener('blur', () => {
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.images.push(url);
+        input.value = '';
+        renderWcmLists();
+      });
+    });
+
+    // Extra bio
+    document.querySelectorAll('[data-wcm-bio-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.extraBio.find(b => b.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-bio-text]').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const item = wcmDraft.extraBio.find(b => b.id === Number(ta.dataset.id));
+        if(item) item.text = ta.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-bio]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.extraBio = wcmDraft.extraBio.filter(b => b.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+
+    // Bottom sections
+    document.querySelectorAll('[data-wcm-bottom-title]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(item) item.title = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-bottom-text]').forEach(ta => {
+      ta.addEventListener('input', () => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(ta.dataset.id));
+        if(item) item.text = ta.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-bottom]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.bottomSections = wcmDraft.bottomSections.filter(s => s.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-add-bottom-image]').forEach(input => {
+      input.addEventListener('change', async e => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        if(!item || !e.target.files[0]) return;
+        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85, 260 * 1024);
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-bottom-image-link]').forEach(input => {
+      const commit = () => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.image = url;
+        input.value = '';
+        renderWcmLists();
+      };
+      input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+      input.addEventListener('blur', commit);
+    });
+    document.querySelectorAll('[data-wcm-remove-bottom-image]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(btn.dataset.id));
+        if(item) item.image = '';
+        renderWcmLists();
+      });
+    });
+
+    // Contacts (multi-platform)
+    document.querySelectorAll('[data-wcm-contact-platform]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.contacts.find(c => c.id === Number(input.dataset.id));
+        if(item) item.platform = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-contact-username]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.contacts.find(c => c.id === Number(input.dataset.id));
+        if(item) item.username = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-contact]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.contacts = wcmDraft.contacts.filter(c => c.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+
+    // Links
+    document.querySelectorAll('[data-wcm-link-label]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.links.find(l => l.id === Number(input.dataset.id));
+        if(item) item.label = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-link-url]').forEach(input => {
+      input.addEventListener('input', () => {
+        const item = wcmDraft.links.find(l => l.id === Number(input.dataset.id));
+        if(item) item.url = input.value;
+      });
+    });
+    document.querySelectorAll('[data-wcm-remove-link]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wcmDraft.links = wcmDraft.links.filter(l => l.id !== Number(btn.dataset.id));
+        renderWcmLists();
+      });
+    });
+  }
+
+  // ---------------- Availability editor bindings (static elements) ----------------
+  document.getElementById('wcmAvailTz').addEventListener('input', () => {
+    if(!availDraft) return;
+    availDraft.timezone = document.getElementById('wcmAvailTz').value;
+    updateAvailHint();
+  });
+  document.querySelectorAll('#wcmAvailDays .day-chip').forEach(ch => {
+    ch.addEventListener('click', () => {
+      if(!availDraft) return;
+      const d = ch.dataset.day;
+      availDraft.days = availDraft.days.includes(d)
+        ? availDraft.days.filter(x => x !== d)
+        : [...availDraft.days, d];
+      // Keep editor order Sun→Sat regardless of click order. Local list
+      // (not the ui.js one) so day picking can never break on a stale
+      // cached asset.
+      availDraft.days.sort((a, b) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(a) - ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(b));
+      renderAvailDraft();
+    });
+  });
+  ['wcmAvailStart', 'wcmAvailEnd'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      if(!availDraft) return;
+      availDraft[id === 'wcmAvailStart' ? 'start' : 'end'] = document.getElementById(id).value;
+      updateAvailHint();
+    });
+  });
+  document.getElementById('wcmAvailNote').addEventListener('input', () => {
+    if(!availDraft) return;
+    availDraft.note = document.getElementById('wcmAvailNote').value;
+  });
+
+  document.getElementById('wcmAddRateBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.rates.push({ id: nextWcmId(wcmDraft.rates), label: '', amount: '' });
+    renderWcmLists();
+  });
+  document.getElementById('wcmAddPortfolioBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.portfolio.push({ id: nextWcmId(wcmDraft.portfolio), title: 'Untitled project', images: [] });
+    renderWcmLists();
+  });
+  document.getElementById('wcmAddBioBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.extraBio.push({ id: nextWcmId(wcmDraft.extraBio), title: 'Untitled', text: '' });
+    renderWcmLists();
+  });
+  document.getElementById('wcmAddBottomBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.bottomSections.push({ id: nextWcmId(wcmDraft.bottomSections), title: 'Untitled', image: '', text: '' });
+    renderWcmLists();
+  });
+  document.getElementById('wcmAddContactBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.contacts.push({ id: nextWcmId(wcmDraft.contacts), platform: '', username: '' });
+    renderWcmLists();
+  });
+  document.getElementById('wcmAddLinkBtn').addEventListener('click', () => {
+    if(!wcmDraft) return;
+    wcmDraft.links.push({ id: nextWcmId(wcmDraft.links), label: '', url: '' });
+    renderWcmLists();
+  });
+
+  // ---------------- Save ----------------
+  document.getElementById('workerSaveBtn').addEventListener('click', async () => {
+    const errEl = document.getElementById('workerSaveError');
+    const okEl = document.getElementById('workerSaveSuccess');
+    errEl.textContent = '';
+    okEl.textContent = '';
+
+    const updates = {
+      name: document.getElementById('workerEditName').value.trim(),
+      role: document.getElementById('workerEditRole').value.trim(),
+      gender: document.getElementById('workerEditGender').value.trim(),
+      status: document.getElementById('workerEditStatus').value,
+      bio: document.getElementById('workerEditBio').value.trim(),
+      tags: document.getElementById('workerEditTags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean),
+      contacts: wcmDraft.contacts
+        .map(c => ({ platform: c.platform.trim(), username: c.username.trim() }))
+        .filter(c => c.platform || c.username),
+      links: wcmDraft.links
+        .map(l => ({ label: (l.label || '').trim(), url: (l.url || '').trim() }))
+        .filter(l => l.url),
+      schedule: document.getElementById('workerEditSchedule').value.trim(),
+      availability: (() => {
+        if(!availDraft) return undefined;
+        const hasAny = availDraft.timezone.trim() || availDraft.start || availDraft.end ||
+          availDraft.days.length || availDraft.note.trim();
+        if(!hasAny) return {}; // fully emptied → server clears the field
+        // Complete entry saves; partial entry keeps what's stored
+        // (the hint tells the worker what's still missing).
+        return (availDraft.timezone.trim() && availDraft.start && availDraft.days.length) ? {
+          timezone: availDraft.timezone.trim(),
+          days: [...availDraft.days],
+          start: availDraft.start,
+          end: availDraft.end || availDraft.start,
+          note: availDraft.note.trim()
+        } : undefined;
+      })(),
+      rates: wcmDraft.rates.filter(r => r.label.trim() || r.amount.trim())
+        .map(r => ({ id: r.id, label: r.label.trim(), amount: r.amount.trim() })),
+      services: {
+        offered: document.getElementById('workerEditServicesYes').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 25),
+        blocked: document.getElementById('workerEditServicesNo').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 25)
+      },
+      portfolio: wcmDraft.portfolio,
+      extraBio: wcmDraft.extraBio,
+      bottomSections: wcmDraft.bottomSections
+    };
+    if(pendingImageDataUrl) updates.image = pendingImageDataUrl;
+
+    try{
+      const res = await fetch('/.netlify/functions/publish-worker-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: sessionToken, updates })
+      });
+      const body = await res.json();
+
+      if(!res.ok){
+        const expired = res.status === 401;
+        errEl.textContent = (body.error || 'Save failed.') + (expired ? ' Please log in again.' : '');
+        if(expired){
+          clearStoredSession();
+          sessionToken = null;
+          sessionVerifiedForId = null;
+          updateEditButtonVisibility();
+          showLoginStep();
+        }
+        showToast(body.error || 'Save failed.', 'err');
+        return;
+      }
+
+      if(body.token){
+        sessionToken = body.token;
+        storeSession(sessionToken);
+      }
+
+      pendingImageDataUrl = null;
+      okEl.textContent = 'Saved. Refresh this page to see your changes reflected.';
+      showToast('Changes saved and published.', 'ok');
+    }catch(e){
+      errEl.textContent = `Network error: ${e.message}`;
+      showToast(`Network error: ${e.message}`, 'err');
+    }
+  });
+</script>
+</body>
+</html>
