@@ -141,6 +141,12 @@ typed code for publish) if that matters for your deployment.
 Upload (or commit) the whole folder — the site is static plus three
 serverless functions. Checklist:
 
+0. **Upload the folder's CONTENTS, not the folder itself.** Dragging
+   `virtualplaytoys-main` into GitHub creates a nested
+   `virtualplaytoys-main/` folder inside the repo — the site keeps
+   serving the OLD files (including old functions), which looks like
+   "my fix didn't work". The repo root should directly contain
+   `index.html`, `assets/`, and `netlify/functions/`.
 1. All 4 HTML files, `assets/ui.js`, `assets/site.css`, and
    `members-data.js` — the `?v=N` query strings in the HTML must match
    the newest asset versions (bump `?v=` when changing ui.js/site.css so

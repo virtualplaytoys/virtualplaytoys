@@ -76,7 +76,7 @@ function verifyTOTP(secretBase32, code) {
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed (fn=v10)' }) };
   }
 
   const {
@@ -149,6 +149,6 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error: ${e.message}` }) };
+    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error (fn=v10): ${e.message}` }) };
   }
 };
