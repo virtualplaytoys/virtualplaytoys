@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>~*~ VirtualPlayToys ~*~ Avatar Directory ~*~</title>
-<link rel="stylesheet" href="assets/site.css?v=7" />
+<link rel="stylesheet" href="assets/site.css?v=10" />
 <style>
   /* ---------- Admin toolbar (staging / commit) ---------- */
   .admin-toolbar{
@@ -244,8 +244,8 @@
   </div>
 </div>
 
-<script src="members-data.js?v=7"></script>
-<script src="assets/ui.js?v=7"></script>
+<script src="members-data.js?v=10"></script>
+<script src="assets/ui.js?v=10"></script>
 <script>
 (async () => {
   const ADMIN_SESSION_KEY = 'prism_admin_session';
@@ -432,7 +432,8 @@
   const track = document.getElementById('marqueeTrack');
 
   function imageFor(member, seed){
-    return member.image || placeholderImg(seed, member.name.split(' ')[0]);
+    const img = member.image ? safeImageSrc(member.image) : placeholderImg(seed, member.name.split(' ')[0]);
+    return img;
   }
 
   function makeItem(memberIndex){

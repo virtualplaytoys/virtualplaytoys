@@ -135,3 +135,32 @@ typed code for publish) if that matters for your deployment.
   versions plus "it's HH:MM there right now", and live clocks use
   each zone's current DST offset. The free-text `schedule` field is
   still available alongside it.
+
+## Deploying to GitHub / Netlify
+
+Upload (or commit) the whole folder — the site is static plus three
+serverless functions. Checklist:
+
+0. **Upload the folder's CONTENTS, not the folder itself.** Dragging
+   `virtualplaytoys-main` into GitHub creates a nested
+   `virtualplaytoys-main/` folder inside the repo — the site keeps
+   serving the OLD files (including old functions), which looks like
+   "my fix didn't work". The repo root should directly contain
+   `index.html`, `assets/`, and `netlify/functions/`.
+1. All 4 HTML files, `assets/ui.js`, `assets/site.css`, and
+   `members-data.js` — the `?v=N` query strings in the HTML must match
+   the newest asset versions (bump `?v=` when changing ui.js/site.css so
+   visitors' browsers drop their cached copy).
+2. `netlify/functions/*.js` — worker login and saving break on the live
+   site if these are stale.
+3. `members-data.json` — the live roster (includes worker uploads).
+4. `worker-secrets.json` must exist in the repo (functions read it via
+   the GitHub API); the netlify.toml redirect keeps it from being
+   downloadable from the site itself.
+5. After uploading, hard-refresh once (Ctrl+F5) on your own browser.
+
+Env vars required on Netlify (Site settings → Environment variables):
+GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH (optional,
+defaults to main), GITHUB_FILE_PATH (defaults to members-data.json),
+ADMIN_TOTP_SECRET, WORKER_SECRETS_PATH (defaults to
+worker-secrets.json), WORKER_SESSION_SECRET (optional but recommended).

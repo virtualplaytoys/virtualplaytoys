@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin — VirtualPlayToys</title>
-<link rel="stylesheet" href="assets/site.css?v=7" />
+<link rel="stylesheet" href="assets/site.css?v=10" />
 <style>
   .login-wrap{
     min-height:100vh;
@@ -242,6 +242,7 @@
       <div class="field">
         <label for="profileImageFile">Picture</label>
         <input type="file" id="profileImageFile" accept="image/*" />
+        <input type="url" id="profileImageLink" placeholder="…or paste an image link (https://pbs.twimg.com/…)" />
         <p class="field-hint">Leave blank to keep a generated placeholder image.</p>
         <img id="profileImagePreview" class="image-preview" style="display:none;" />
         <input type="hidden" id="profileImageData" />
@@ -358,8 +359,8 @@
   </div>
 </div>
 
-<script src="members-data.js?v=7"></script>
-<script src="assets/ui.js?v=7"></script>
+<script src="members-data.js?v=10"></script>
+<script src="assets/ui.js?v=10"></script>
 <script>
 (async () => {
   let MEMBERS = await loadMembers();
@@ -609,11 +610,21 @@
   document.getElementById('profileImageFile').addEventListener('change', async e => {
     const file = e.target.files[0];
     if(!file) return;
-    const dataUrl = await resizeImageFile(file);
+    const dataUrl = await resizeImageFile(file, 1200, 0.82, 200 * 1024);
+    document.getElementById('profileImageLink').value = ''; // upload wins
     document.getElementById('profileImageData').value = dataUrl;
     const preview = document.getElementById('profileImagePreview');
     preview.src = dataUrl;
     preview.style.display = 'block';
+  });
+
+  // Paste-a-link alternative to uploading (last action wins).
+  document.getElementById('profileImageLink').addEventListener('input', e => {
+    const url = e.target.value.trim();
+    document.getElementById('profileImageData').value = url;
+    const preview = document.getElementById('profileImagePreview');
+    if(url){ preview.src = safeImageSrc(url); preview.style.display = 'block'; }
+    else preview.style.display = 'none';
   });
 
   profileForm.addEventListener('submit', async e => {
@@ -956,11 +967,14 @@
   });
 
   function portfolioRowTemplate(p){
-    const images = (p.images || []).map((src, imgIdx) => `
+    const images = (p.images || []).map((src, imgIdx) => {
+      const u = safeImageSrc(src);
+      return `
       <div class="cm-thumb">
-        <img src="${src}" alt="" data-lightbox-src="${src}" />
+        <img src="${u}" alt="" data-lightbox-src="${u}" />
         <button type="button" data-remove-image data-project-id="${p.id}" data-image-index="${imgIdx}">✕</button>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     return `
       <div class="cm-row">
@@ -972,6 +986,7 @@
               <label>+ Add image(s)
                 <input type="file" accept="image/*" multiple data-add-image data-id="${p.id}" />
               </label>
+              <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-image-link data-id="${p.id}" />
             </div>
           </div>
           <button type="button" class="cm-remove" data-remove-portfolio data-id="${p.id}" title="Remove project">✕</button>
@@ -1006,10 +1021,12 @@
 
   function bottomSectionRowTemplate(s){
     const imagePreview = s.image
-      ? `<div class="cm-thumb"><img src="${s.image}" alt="" data-lightbox-src="${s.image}" /><button type="button" data-remove-bottom-image data-id="${s.id}">✕</button></div>`
+      ? (() => { const u = safeImageSrc(s.image); return `<div class="cm-thumb"><img src="${u}" alt="" data-lightbox-src="${u}" /><button type="button" data-remove-bottom-image data-id="${s.id}">✕</button></div>`; })()
       : `<div class="cm-add-image"><label>+ Add image
           <input type="file" accept="image/*" data-add-bottom-image data-id="${s.id}" />
-        </label></div>`;
+        </label>
+        <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-bottom-image-link data-id="${s.id}" />
+      </div>`;
 
     return `
       <div class="cm-row">
@@ -1091,10 +1108,24 @@
         const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
         if(!item) return;
         const files = [...e.target.files];
-        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85)));
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85, 260 * 1024)));
         item.images.push(...dataUrls);
+        const linkInput = input.closest('.cm-add-image')?.querySelector('[data-image-link]');
+        if(linkInput) linkInput.value = '';
         renderContentLists();
       });
+    });
+    document.querySelectorAll('[data-image-link]').forEach(input => {
+      const commit = () => {
+        const item = contentDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.images.push(url);
+        input.value = '';
+        renderContentLists();
+      };
+      input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+      input.addEventListener('blur', commit);
     });
 
     // Extra bio
@@ -1132,9 +1163,21 @@
       input.addEventListener('change', async e => {
         const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
         if(!item || !e.target.files[0]) return;
-        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85);
+        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85, 260 * 1024);
         renderContentLists();
       });
+    });
+    document.querySelectorAll('[data-bottom-image-link]').forEach(input => {
+      const commit = () => {
+        const item = contentDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.image = url;
+        input.value = '';
+        renderContentLists();
+      };
+      input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+      input.addEventListener('blur', commit);
     });
     document.querySelectorAll('[data-remove-bottom-image]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1149,7 +1192,8 @@
   // Grid render (management list)
   // ---------------------------------------------------------
   function imageFor(member, seed){
-    return member.image || placeholderImg(seed, member.name.split(' ')[0]);
+    const img = member.image ? safeImageSrc(member.image) : placeholderImg(seed, member.name.split(' ')[0]);
+    return img;
   }
 
   const searchInput = document.getElementById('searchInput');

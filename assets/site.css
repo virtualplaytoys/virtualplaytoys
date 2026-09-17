@@ -394,6 +394,31 @@ footer.site-footer .footer-links{
   margin-top:2px;
 }
 .cm-add-image input{ display:none; }
+/* Paste-a-link input shown beside the upload button */
+.cm-image-link{
+  display:block;
+  width:100%;
+  max-width:340px;
+  margin-top:6px;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:7px 10px;
+  color:var(--text);
+  font-size:0.75rem;
+}
+.cm-image-link:focus{ border-color:var(--accent); outline:none; }
+.field input[type="url"]{
+  width:100%;
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:8px 11px;
+  color:var(--text);
+  margin-top:6px;
+  font-size:0.8rem;
+}
+.field input[type="url"]:focus{ border-color:var(--accent); outline:none; }
 .cm-empty{ font-size:0.8rem; color:var(--text-faint); margin:0 0 8px; }
 
 /* ---------- Grid ---------- */

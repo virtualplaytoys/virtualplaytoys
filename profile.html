@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>VirtualPlayToys</title>
-<link rel="stylesheet" href="assets/site.css?v=7" />
+<link rel="stylesheet" href="assets/site.css?v=10" />
 <style>
   .top-nav{ max-width:1060px; margin:0 auto; padding:18px 4vw 0; }
   .top-nav a{ font-size:0.84rem; color:var(--text-faint); }
@@ -349,6 +349,7 @@
         <div class="field">
           <label for="workerEditImage">Profile photo</label>
           <input type="file" id="workerEditImage" accept="image/*" />
+          <input type="url" id="workerEditImageLink" placeholder="…or paste an image link (https://pbs.twimg.com/…)" />
           <img id="workerEditImagePreview" class="image-preview" style="display:none;" />
         </div>
 
@@ -502,8 +503,8 @@
   </div>
 </div>
 
-<script src="members-data.js?v=7"></script>
-<script src="assets/ui.js?v=7"></script>
+<script src="members-data.js?v=10"></script>
+<script src="assets/ui.js?v=10"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   const id = Number(params.get('id'));
@@ -536,6 +537,7 @@
     const pill = `<span class="status-pill ${m.status === 'unavailable' ? 'away' : ''}">${m.status === 'unavailable' ? 'Not Available' : 'Available'}</span>`;
     const tags = (m.tags || []).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
     const photo = m.image || placeholderImg(0, m.name.split(' ')[0], 500, 625);
+    const photoSrc = safeImageSrc(photo);
     const contacts = Array.isArray(m.contacts) ? m.contacts.filter(c => c.platform || c.username) : [];
     const hasContact = contacts.length > 0;
     const links = (Array.isArray(m.links) ? m.links : []).filter(l => l.url);
@@ -547,7 +549,7 @@
     content.innerHTML = `
       <div class="profile-hero box">
         <div class="profile-photo" data-lightbox>
-          <img src="${photo}" alt="${escapeHtml(m.name)}" data-lightbox-src="${photo}" />
+          <img src="${photoSrc}" alt="${escapeHtml(m.name)}" data-lightbox-src="${photoSrc}" />
         </div>
         <div class="profile-headline">
           <div class="top-row">
@@ -674,7 +676,7 @@
     return portfolio.map((p, i) => {
       const openClass = (forceOpen || i === 0) ? ' open' : '';
       const images = (p.images && p.images.length)
-        ? p.images.map((src, idx) => `<img src="${src}" alt="${escapeHtml(p.title)} image ${idx + 1}" loading="lazy" data-lightbox-src="${src}" />`).join('')
+        ? p.images.map((src, idx) => { const u = safeImageSrc(src); return `<img src="${u}" alt="${escapeHtml(p.title)} image ${idx + 1}" loading="lazy" data-lightbox-src="${u}" />`; }).join('')
         : `<img src="${placeholderImg(i, p.title, 320, 240)}" alt="${escapeHtml(p.title)} placeholder" loading="lazy" />`;
 
       return `
@@ -707,7 +709,7 @@
           <span class="caret">&#9656;</span>
         </div>
         <div class="acc-body" data-lightbox>
-          ${s.image ? `<img src="${s.image}" alt="${escapeHtml(s.title)}" style="max-width:240px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px; cursor:zoom-in;" data-lightbox-src="${s.image}" />` : ''}
+          ${s.image ? (() => { const u = safeImageSrc(s.image); return `<img src="${u}" alt="${escapeHtml(s.title)}" style="max-width:240px; border-radius:8px; border:1px solid var(--border); margin-bottom:10px; cursor:zoom-in;" data-lightbox-src="${u}" />`; })() : ''}
           ${s.text ? `<p style="font-size:0.87rem; color:var(--text-dim); margin:0; white-space:pre-wrap;">${escapeHtml(s.text)}</p>` : ''}
         </div>
       </div>`).join('');
@@ -959,10 +961,21 @@
   document.getElementById('workerEditImage').addEventListener('change', async e => {
     const file = e.target.files[0];
     if(!file) return;
-    pendingImageDataUrl = await resizeImageFile(file, 800, 0.82);
+    pendingImageDataUrl = await resizeImageFile(file, 800, 0.82, 200 * 1024);
+    document.getElementById('workerEditImageLink').value = ''; // upload wins — show it
     const preview = document.getElementById('workerEditImagePreview');
     preview.src = pendingImageDataUrl;
     preview.style.display = 'block';
+  });
+
+  // Paste-a-link alternative to uploading — zero bytes added to the
+  // site's data file. Last action (upload vs link) wins.
+  document.getElementById('workerEditImageLink').addEventListener('input', e => {
+    const url = e.target.value.trim();
+    pendingImageDataUrl = url || null;
+    const preview = document.getElementById('workerEditImagePreview');
+    if(url){ preview.src = safeImageSrc(url); preview.style.display = 'block'; }
+    else preview.style.display = 'none';
   });
 
   // ---------------- Content manager (rates / portfolio / bio / bottom) ----------------
@@ -1031,7 +1044,7 @@
       ? wcmDraft.portfolio.map(p => {
           const images = (p.images || []).map((src, idx) => `
             <div class="cm-thumb">
-              <img src="${src}" alt="" data-lightbox-src="${src}" />
+              <img src="${safeImageSrc(src)}" alt="" data-lightbox-src="${safeImageSrc(src)}" />
               <button type="button" data-wcm-remove-image data-pid="${p.id}" data-idx="${idx}">✕</button>
             </div>`).join('');
           return `
@@ -1044,6 +1057,7 @@
                     <label>+ Add image(s)
                       <input type="file" accept="image/*" multiple data-wcm-add-image data-id="${p.id}" />
                     </label>
+                    <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-wcm-image-link data-id="${p.id}" />
                   </div>
                 </div>
                 <button type="button" class="cm-remove" data-wcm-remove-portfolio data-id="${p.id}" title="Remove project">✕</button>
@@ -1071,7 +1085,9 @@
             ? `<div class="cm-thumb"><img src="${s.image}" alt="" data-lightbox-src="${s.image}" /><button type="button" data-wcm-remove-bottom-image data-id="${s.id}">✕</button></div>`
             : `<div class="cm-add-image"><label>+ Add image
                 <input type="file" accept="image/*" data-wcm-add-bottom-image data-id="${s.id}" />
-              </label></div>`;
+              </label>
+              <input type="url" class="cm-image-link" placeholder="…or paste an image link (https://…)" data-wcm-bottom-image-link data-id="${s.id}" />
+            </div>`;
           return `
             <div class="cm-row">
               <div class="cm-row-top">
@@ -1136,8 +1152,30 @@
         const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
         if(!item) return;
         const files = [...e.target.files];
-        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85)));
+        const dataUrls = await Promise.all(files.map(f => resizeImageFile(f, 1800, 0.85, 260 * 1024)));
         item.images.push(...dataUrls);
+        const linkInput = input.closest('.cm-add-image')?.querySelector('[data-wcm-image-link]');
+        if(linkInput) linkInput.value = '';
+        renderWcmLists();
+      });
+    });
+    document.querySelectorAll('[data-wcm-image-link]').forEach(input => {
+      input.addEventListener('keydown', e => {
+        if(e.key !== 'Enter') return;
+        e.preventDefault();
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.images.push(url);
+        input.value = '';
+        renderWcmLists();
+      });
+      input.addEventListener('blur', () => {
+        const item = wcmDraft.portfolio.find(p => p.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.images.push(url);
+        input.value = '';
         renderWcmLists();
       });
     });
@@ -1185,9 +1223,21 @@
       input.addEventListener('change', async e => {
         const item = wcmDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
         if(!item || !e.target.files[0]) return;
-        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85);
+        item.image = await resizeImageFile(e.target.files[0], 1800, 0.85, 260 * 1024);
         renderWcmLists();
       });
+    });
+    document.querySelectorAll('[data-wcm-bottom-image-link]').forEach(input => {
+      const commit = () => {
+        const item = wcmDraft.bottomSections.find(s => s.id === Number(input.dataset.id));
+        const url = input.value.trim();
+        if(!item || !url) return;
+        item.image = url;
+        input.value = '';
+        renderWcmLists();
+      };
+      input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); commit(); } });
+      input.addEventListener('blur', commit);
     });
     document.querySelectorAll('[data-wcm-remove-bottom-image]').forEach(btn => {
       btn.addEventListener('click', () => {

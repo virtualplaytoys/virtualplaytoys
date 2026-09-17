@@ -54,7 +54,7 @@ const WORKER_EDITABLE_FIELDS = [
 // Required shape of each structured field. 'string' = must be a
 // string (trimmed); objects/arrays are checked recursively.
 const VALIDATION_SHAPES = {
-  bio: 'string', status: 'string', image: 'string', gender: 'string', role: 'string', name: 'string',
+  bio: 'string', status: 'string', image: 'imageSrc', gender: 'string', role: 'string', name: 'string',
   schedule: 'string',
   // Structured availability: the performer's usual online window in
   // THEIR timezone. The profile renders it converted to each visitor's
@@ -97,7 +97,7 @@ const VALIDATION_SHAPES = {
   tags: { type: 'array', item: 'string', max: 30 },
   portfolio: {
     type: 'array', max: 50,
-    item: { id: 'int', title: 'string', images: { type: 'array', item: 'string', max: 30 } }
+    item: { id: 'int', title: 'string', images: { type: 'array', item: 'imageSrc', max: 30 } }
   },
   extraBio: {
     type: 'array', max: 50,
@@ -105,7 +105,7 @@ const VALIDATION_SHAPES = {
   },
   bottomSections: {
     type: 'array', max: 50,
-    item: { id: 'int', title: 'string', image: 'string', text: 'string' }
+    item: { id: 'int', title: 'string', image: 'imageSrc', text: 'string' }
   }
 };
 
@@ -120,22 +120,29 @@ const MAX_IMAGE_DATAURL = 4 * 1024 * 1024; // ~4 MB per image
 function validateField(field, value) {
   const spec = VALIDATION_SHAPES[field];
   if (!spec) throw new Error(`"${field}" has no validation rule.`);
-  const validated = validateValue(field, value, spec);
-  // Drop half-filled rows instead of rejecting the whole save — an
-  // editor row missing its platform or username can't be displayed
-  // meaningfully, so it's dropped as a UI artifact, not bad data.
-  if (field === 'contacts') return validated.filter(c => c.platform && c.username);
-  if (field === 'links') return validated.filter(l => l.url);
   // An availability block without a timezone or a start time can't be
-  // converted, so it would never render — drop it as a UI artifact.
+  // converted, so it would never render. An empty or half-filled object
+  // (the editors send {} when the worker clears everything) means
+  // "clear the field" — handle that BEFORE shape validation, which
+  // would otherwise throw on the missing keys.
   if (field === 'availability') {
-    if (!validated.timezone || !validated.start || !validated.days || !validated.days.length) return undefined;
+    const isEmptyish = !value || typeof value !== 'object' || Array.isArray(value) ||
+      !String(value.timezone || '').trim() || !String(value.start || '').trim() ||
+      !Array.isArray(value.days) || !value.days.length;
+    if (isEmptyish) return undefined; // clears the stored field
+    const validated = validateValue(field, value, spec);
     try { new Intl.DateTimeFormat('en-US', { timeZone: validated.timezone }); }
     catch (e) {
       throw new Error(`"availability.timezone" is not a recognized IANA timezone (e.g. Pacific/Auckland).`);
     }
     return validated;
   }
+  const validated = validateValue(field, value, spec);
+  // Drop half-filled rows instead of rejecting the whole save — an
+  // editor row missing its platform or username can't be displayed
+  // meaningfully, so it's dropped as a UI artifact, not bad data.
+  if (field === 'contacts') return validated.filter(c => c.platform && c.username);
+  if (field === 'links') return validated.filter(l => l.url);
   return validated;
 }
 
@@ -147,6 +154,24 @@ function validateValue(path, value, spec) {
       throw new Error(`"${path}" must be a full http(s) link, e.g. https://example.com/you`);
     }
     return t;
+  }
+  // Image fields accept either an embedded data URL (uploaded photo) or
+  // an https link (photo hosted on Twitter/Bluesky/anywhere else). http
+  // links are rejected — mixed content gets blocked by browsers on the
+  // https site anyway, and https-only keeps hotlinked images verifiable.
+  if (spec === 'imageSrc') {
+    if (typeof value !== 'string') throw new Error(`"${path}" must be a string.`);
+    const t = value.trim();
+    if (!t) return '';
+    if (/^data:image\/(png|jpeg|jpg|gif|webp);/i.test(t)) {
+      if (t.length > MAX_IMAGE_DATAURL) throw new Error(`"${path}" is too large (over ${Math.round(MAX_IMAGE_DATAURL / 1024 / 1024)} MB).`);
+      return t;
+    }
+    if (/^https:\/\/\S+$/i.test(t)) {
+      if (t.length > 2048) throw new Error(`"${path}" link is too long (over 2048 characters).`);
+      return t;
+    }
+    throw new Error(`"${path}" must be an https image link (e.g. https://pbs.twimg.com/...) or an uploaded photo.`);
   }
   if (spec === 'time') {
     if (typeof value !== 'string') throw new Error(`"${path}" must be a string.`);
@@ -171,6 +196,11 @@ function validateValue(path, value, spec) {
     if (!Array.isArray(value)) throw new Error(`"${path}" must be an array.`);
     if (value.length > spec.max) throw new Error(`"${path}" allows at most ${spec.max} entries.`);
     if (typeof spec.item === 'string') {
+      // Scalar specs with their own rules (image links, http(s) links,
+      // times) must run per item — they're not plain strings.
+      if (spec.item === 'url' || spec.item === 'imageSrc' || spec.item === 'time') {
+        return value.map((v, i) => validateValue(`${path}[${i}]`, v, spec.item)).filter(Boolean);
+      }
       return value.map((v, i) => {
         if (typeof v !== 'string') throw new Error(`"${path}" must contain only strings.`);
         if (v.length > MAX_IMAGE_DATAURL) throw new Error(`An entry in "${path}" is too large (over ${Math.round(MAX_IMAGE_DATAURL / 1024 / 1024)} MB).`);
@@ -328,16 +358,42 @@ function isRateLimited(event) {
   return false;
 }
 
+// ---------------------------------------------------------------------
+// GitHub file helpers. Two-step read:
+//   1. GET the file's METADATA (?ref=branch) — tiny JSON with the
+//      current sha (needed for commits). The metadata body also carries
+//      base64 content, but ONLY for files under 1 MB.
+//   2. Fetch the actual CONTENT with Accept: application/vnd.github.raw
+//      — GitHub serves the raw file up to 100 MB. This matters:
+//      members-data.json embeds worker-uploaded images as data URLs and
+//      has already crossed 1 MB. With the old single-call read, GitHub
+//      returned content:"" and JSON.parse threw "Unexpected end of JSON
+//      input", which bricked every worker login and save.
+// ---------------------------------------------------------------------
 async function githubGetFile(apiUrl, branch, headers) {
-  const res = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, { headers });
-  if (res.status === 200) {
-    const body = await res.json();
-    const content = JSON.parse(Buffer.from(body.content, 'base64').toString('utf8'));
-    return { content, sha: body.sha };
+  const metaRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, { headers });
+  if (metaRes.status === 404) return { content: [], sha: undefined };
+  if (metaRes.status !== 200) {
+    const errBody = await metaRes.text();
+    throw new Error(`GitHub lookup failed: ${metaRes.status} ${errBody}`);
   }
-  if (res.status === 404) return { content: [], sha: undefined };
-  const errBody = await res.text();
-  throw new Error(`GitHub lookup failed: ${res.status} ${errBody}`);
+  const meta = await metaRes.json();
+
+  const rawRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, {
+    headers: { ...headers, Accept: 'application/vnd.github.raw' }
+  });
+  if (!rawRes.ok) {
+    const errBody = await rawRes.text();
+    throw new Error(`GitHub content fetch failed: ${rawRes.status} ${errBody}`);
+  }
+  const rawText = await rawRes.text();
+  let content;
+  try {
+    content = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error(`Stored file at ${apiUrl} is not valid JSON (${e.message}). Last change may have corrupted it — restore a good copy and try again.`);
+  }
+  return { content, sha: meta.sha };
 }
 
 async function githubPutFile(apiUrl, branch, headers, contentObj, sha, message) {
@@ -355,7 +411,7 @@ async function githubPutFile(apiUrl, branch, headers, contentObj, sha, message) 
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed (fn=v10)' }) };
   }
 
   const {
@@ -468,6 +524,6 @@ exports.handler = async (event) => {
 
     return { statusCode: 200, body: JSON.stringify({ ok: true, token: issueSessionToken(memberId) }) };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error: ${e.message}` }) };
+    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error (fn=v10): ${e.message}` }) };
   }
 };

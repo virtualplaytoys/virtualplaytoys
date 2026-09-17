@@ -72,21 +72,40 @@ function generateWorkerSecret(length = 16) {
   return secret;
 }
 
+// Two-step read (metadata for the sha, raw media type for the content).
+// The single-call read below used to break on files over 1 MB — GitHub's
+// metadata response returns content:"" for those, and JSON.parse("")
+// throws "Unexpected end of JSON input". members-data.json has already
+// crossed 1 MB (embedded worker photos), so the raw fetch is required.
 async function githubGetFile(apiUrl, branch, headers) {
-  const res = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, { headers });
-  if (res.status === 200) {
-    const body = await res.json();
-    const content = JSON.parse(Buffer.from(body.content, 'base64').toString('utf8'));
-    return { content, sha: body.sha };
+  const metaRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, { headers });
+  if (metaRes.status === 404) return { content: [], sha: undefined };
+  if (metaRes.status !== 200) {
+    const errBody = await metaRes.text();
+    throw new Error(`GitHub lookup failed: ${metaRes.status} ${errBody}`);
   }
-  if (res.status === 404) return { content: [], sha: undefined };
-  const errBody = await res.text();
-  throw new Error(`GitHub lookup failed: ${res.status} ${errBody}`);
+  const meta = await metaRes.json();
+
+  const rawRes = await fetch(`${apiUrl}?ref=${encodeURIComponent(branch)}`, {
+    headers: { ...headers, Accept: 'application/vnd.github.raw' }
+  });
+  if (!rawRes.ok) {
+    const errBody = await rawRes.text();
+    throw new Error(`GitHub content fetch failed: ${rawRes.status} ${errBody}`);
+  }
+  const rawText = await rawRes.text();
+  let content;
+  try {
+    content = JSON.parse(rawText);
+  } catch (e) {
+    throw new Error(`Stored file at ${apiUrl} is not valid JSON (${e.message}). Restore a good copy and try again.`);
+  }
+  return { content, sha: meta.sha };
 }
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed (fn=v10)' }) };
   }
 
   const {
@@ -151,6 +170,6 @@ exports.handler = async (event) => {
     // It is never written anywhere the public site reads.
     return { statusCode: 200, body: JSON.stringify({ ok: true, secret: newSecret }) };
   } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error: ${e.message}` }) };
+    return { statusCode: 500, body: JSON.stringify({ error: `Unexpected error (fn=v10): ${e.message}` }) };
   }
 };

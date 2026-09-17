@@ -97,6 +97,34 @@ function wireLightboxes(scope = document){
   });
 }
 
+/* ---------- Safe image sources ----------
+   Every <img src> on the site goes through this. Allows embedded data
+   URLs (uploads) and http(s) links (Twitter/Bluesky/anywhere) — anything
+   else (javascript:, data:text/html, protocol-relative, garbage) renders
+   as the fallback placeholder instead, so a crafted "link" can never
+   inject attributes or execute script. */
+const BLANK_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240"><rect width="100%" height="100%" fill="#261b20"/>' +
+  '<text x="50%" y="50%" fill="#a08090" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">image unavailable</text></svg>'
+);
+function safeImageSrc(src){
+  const s = String(src ?? '').trim();
+  if(/^data:image\/(png|jpeg|jpg|gif|webp);/i.test(s)) return s;
+  if(/^https:\/\/\S+$/i.test(s)) return s;
+  return BLANK_PLACEHOLDER;
+}
+
+// Broken-link fallback: any <img> whose link dies (Twitter CDN 404s etc.)
+// swaps to the placeholder instead of showing the browser's broken icon.
+// SVGs can't bubble errors, so listen on document — works for images
+// added to the DOM at any time, including editor previews.
+document.addEventListener('error', (e) => {
+  const t = e.target;
+  if(t && t.tagName === 'IMG' && t.src !== BLANK_PLACEHOLDER){
+    t.src = BLANK_PLACEHOLDER;
+  }
+}, true); // capture phase — error doesn't bubble
+
 /* ---------- Escaping ---------- */
 function escapeHtml(s){
   return String(s ?? '')
@@ -296,29 +324,62 @@ function convertAvailability(availability, guestTz){
   };
 }
 
-/* ---------- Image resize helper (shared by admin + worker editors) ---------- */
-function resizeImageFile(file, maxDimension = 1200, quality = 0.82){
+/* ---------- Image resize helper (shared by admin + worker editors) ----------
+   Resizes to fit maxDimension, then — if targetBytes is set — keeps
+   re-encoding (softer quality first, then smaller dimensions) until the
+   image fits the budget. That ceiling is what keeps members-data.json
+   from ballooning: no matter how huge or noisy the source photo is,
+   each embedded image stays under its budget.
+   Encoding: WebP is tried first (25–40% smaller than JPEG at the same
+   quality), falling back to JPEG where the browser can't encode WebP.
+   Both decode natively in every visitor's browser — nothing to install.
+   Rough budgets: 200 KB ≈ a large avatar, 260 KB ≈ a lightbox-worthy
+   portfolio shot. ~4/3 factor converts bytes to base64 length. */
+let _webpEncodeable = null;
+function webpEncodeable(){
+  if(_webpEncodeable !== null) return _webpEncodeable;
+  try{
+    const probe = document.createElement('canvas');
+    probe.width = 1; probe.height = 1;
+    _webpEncodeable = probe.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+  }catch(e){ _webpEncodeable = false; }
+  return _webpEncodeable;
+}
+function resizeImageFile(file, maxDimension = 1200, quality = 0.82, targetBytes = 0){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        let { width, height } = img;
-        if(width > maxDimension || height > maxDimension){
-          const scale = maxDimension / Math.max(width, height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
+        const budget = targetBytes > 0 ? (targetBytes * 4 / 3) + 100 : Infinity;
+        const formats = webpEncodeable() ? ['image/webp', 'image/jpeg'] : ['image/jpeg'];
+        let w = Math.max(1, Math.round(img.width * Math.min(1, maxDimension / Math.max(img.width, img.height))));
+        let h = Math.max(1, Math.round(img.height * Math.min(1, maxDimension / Math.max(img.width, img.height))));
+        let q = quality;
+        let out;
+        for(;;){
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#16121c'; // backdrop so transparent PNGs don't turn black
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          // Encode in every format the browser supports; smallest wins.
+          out = formats
+            .map(fmt => canvas.toDataURL(fmt, q))
+            .reduce((a, b) => (b.length < a.length ? b : a));
+          if(out.length <= budget) break;
+          if(q > 0.45){ q = Math.max(0.45, q - 0.12); continue; }        // pass 1: soften
+          if(w > 320 && h > 320){ w = Math.round(w * 0.8); h = Math.round(h * 0.8); q = quality; continue; } // pass 2: shrink, soften again
+          break; // floor reached — ship the best we have
         }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(out);
       };
-      img.onerror = reject;
+      img.onerror = () => reject(new Error('That file could not be read as an image.'));
       img.src = reader.result;
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('Could not read that file.'));
     reader.readAsDataURL(file);
   });
 }
