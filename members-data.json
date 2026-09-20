@@ -31,8 +31,8 @@
       }
     ],
     "bottomSections": [],
-    "updatedAt": "2026-09-20T01:35:36.773Z",
-    "schedule": "",
+    "updatedAt": "2026-09-20T01:40:13.350Z",
+    "schedule": "Availability will vary due to plans premade or schedules.\n\nMonday 3:30pm - 5:00pm (NZST) i will be busy from reoccurring game event.",
     "rates": [
       {
         "id": 1,
@@ -78,9 +78,28 @@
       {
         "platform": "Bluesky",
         "username": "@emberatawhai.nz"
+      },
+      {
+        "platform": "Telegram",
+        "username": "@Ember_Atawhai"
       }
     ],
-    "links": []
+    "links": [],
+    "availability": {
+      "timezone": "Pacific/Auckland",
+      "days": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
+      "start": "15:30",
+      "end": "02:00",
+      "note": "Will Varry Due to Headset Issues"
+    }
   },
   {
     "id": 10,
